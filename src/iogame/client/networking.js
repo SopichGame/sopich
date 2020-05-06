@@ -8,10 +8,16 @@ import { ADD_PLAYER_RETURNS } from '../../game'
 const Constants = require('../shared/constants');
 
 const gameName = 'monsocketserver1'
-const socketUrl = new URL( gameName, window.location )
-socketUrl.protocol = "ws:"
-console.log( 'create socket with',socketUrl.toString() )
-const socket = new WebSocket( socketUrl )
+
+function createOrReuseSocket( gameName ){
+    const socketUrl = new URL( gameName, window.location )
+    socketUrl.protocol = "ws:"
+    console.log( 'create socket with',socketUrl.toString() )
+    const socket = new WebSocket( socketUrl )
+    return socket
+}
+
+const socket = createOrReuseSocket( gameName )
 
 const connectedPromise = new Promise(resolve => {
     socket.onopen = ( () => {
