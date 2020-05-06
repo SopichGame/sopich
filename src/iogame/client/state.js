@@ -119,7 +119,9 @@ function interpolateState( s1, s2, ratio ){
         if ( vb === undefined ) {
             return
         }
-
+        if ( ka === 'debug_collisions' ){
+            return
+        }
         if ( ka === 'ground' ){
             va.forEach( ( h1, i ) => {
                 const h2 = va[ i ]

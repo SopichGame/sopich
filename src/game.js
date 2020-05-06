@@ -4,6 +4,7 @@ const FIRST_PLANE_CANNOT_BE_DESTRUCTED = false
 const MAX_PLANES = 10
 const IDLE_IF_NO_PLAYER = true
 const DEBUG_MESSAGES = true
+const DEBUG_COLLISIONS = true
 //
 // Mode campagne :
 
@@ -167,6 +168,13 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         item.id = newItemId()
         return item
     }
+    function removeItem( item ){
+        item.id = undefined
+    }
+
+    function killItem( item ){
+        item.ttl = -1
+    }
     
     tellScore = tellScore || ( _ => _ )
 
@@ -237,7 +245,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             interv : Math.floor( 3 + Math.random() * 2 ),
             step : 0,
             hitmaskf : Hitmaskfs.bird,
-            destroyed : item => item.ttl = -1
+            destroyed : item => killItem( item )
         })
     }
     function init_flock(i,l){
@@ -248,7 +256,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             interv : Math.floor( 5 + Math.random() * 5 ),
             step : 0,
             hitmaskf : Hitmaskfs.flock,
-            destroyed : item => item.ttl = -1
+            destroyed : item =>  killItem( item ),
         })
     }
     function init_ground(){
@@ -262,6 +270,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             a : ( (i*((Math.random()>0.5)?1:2)) % 16 ),
             hitmaskf : Hitmaskfs.debris,
             dtype : ( i % 8 ),
+            ttl : -1,
         })
     }
     function init_explosion( cs ){
@@ -579,7 +588,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 } else {
                     let next_as = as + dir
                     if ( next_as < 0 ){
-                        leaving.ttl = -1
+                        killItem( leaving )
                     } else {
                         leaving.as = clamp( as + dir, 0, len )
                     }
@@ -884,7 +893,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             bombs.forEach( bomb => {
                 const { explosion } = bomb
                 f( 'bomb', bomb )
-               // explosion.debris.forEach( debri => f( 'debris', debri ) )
+                // explosion.debris.forEach( debri => f( 'debris', debri ) )
             })
             missiles.forEach( missile => {
                 const { explosion } = missile
@@ -910,7 +919,9 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         // building 
         // flock
         // bird
-        
+        if ( DEBUG_COLLISIONS ){
+            State.debug_collisions.push( { item1, item2 } )
+        }
         
         if ( item1.destroys ) item1.destroys( item1, item2 )
         if ( item2.destroys ) item2.destroys( item2, item1 )
@@ -920,10 +931,10 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         
         //
         if ( (!item1.undescrtu) && ( item1.ttl !== undefined ) ){
-            item1.ttl = -1
+            killItem( item1 )
         }
         if ( (!item2.undescrtu) && ( item2.ttl !== undefined ) ){
-            item2.ttl = -1
+            killItem( item2 )
         }
         //
         // ? if ( item1.destoys ) item1.destirt
@@ -969,7 +980,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                     let collides = pixel_bottom_collision(fx,y,bhitmask) // modfies ground..
                     if ( collides ) {
                         if ( ! item1.undescrtu ) {
-                            item1.ttl = -1
+                            killItem( item1 )
                             start_explosion( item1.explosion,fx ,y )
                             start_falling( item1 )
                         }
@@ -1023,7 +1034,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         const mes = { start : Date.now() }
         const intersections = boxIntersect( boundingBoxes )
         mes.end = Date.now()
-//        console.log('collide took', mes.end - mes.start )
+        //        console.log('collide took', mes.end - mes.start )
         intersections.forEach( ([i1,i2]) => {
 
             const ci1 = collisionsItems[ i1 ],
@@ -1050,7 +1061,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
 
         })
     }
-  
+    
     function ground_item16( item ){
         const x = Math.floor( item.x )
         const ground = State.ground
@@ -1072,10 +1083,13 @@ export function Game( { tellPlayer, // called with user centered world, each wor
 
     function turninit_justfired( x ){
         if ( x.justfired ){
-            x.justfired.ttl = -1
+            killItem( x.justfired )
         }
     }
     function turninit(){
+        if ( DEBUG_COLLISIONS ){
+            State.debug_collisions = []
+        }
         State.planes.forEach( ({ttl,bombs,missiles,guidedmissiles}) => {
             bombs.forEach( x => {
                 turninit_justfired( x )
@@ -1107,9 +1121,9 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         let rfps = 1 / dt / FPS
         if ( ( rfps > 1.5 ) || ( rfps < 0.75 ) ){
             debugMessage( `update after ${ dt }s, should be ${ 1/FPS }s`,
-                           `${ 1 / dt }fps, should be ${ FPS }fps `)
+                          `${ 1 / dt }fps, should be ${ FPS }fps `)
         }
-      
+        
         turninit()
         ia(State,{ IA_DOES_NOT_FIRE, IA_JUST_FLIES_AROUND } )
         handleinputs()
@@ -1117,7 +1131,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         const mes = { start : Date.now() }
         collisions()
         mes.end = Date.now()
-//        console.log('total for collisions',mes.end - mes.start )
+        //        console.log('total for collisions',mes.end - mes.start )
         stateUpdated()
         State.lastUpdateTime = now;
 
@@ -1164,6 +1178,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             plane.score = init_score( initialScore )
             plane.score.total = initialScore
             plane_init_inputs( plane )
+            newItem( plane )
             return ADD_PLAYER_RETURNS.OK
         } else {
             return ADD_PLAYER_RETURNS.NO_MORE_AVAILABLE_ITEM
@@ -1256,6 +1271,22 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             })
         } else {
             payload.leaderboard = undefined
+        }
+        if ( DEBUG_COLLISIONS ){
+            payload.debug_collisions = State.debug_collisions.map( ({item1,item2}) => {
+                return {
+                    item1 : {
+                        id : item1.id,
+                        x : item1.x,
+                        y : item1.y,
+                    },
+                    item2 : {
+                        id : item2.id,
+                        x : item2.x,
+                        y : item2.y,
+                    },
+                }
+            })
         }
         State.targets.forEach( target => {
             let { id, x, y, as, broken } = target

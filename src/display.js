@@ -4,6 +4,7 @@ import { clamp, length } from './utils.js'
 import { worldSize } from './game.js'
 
 const DEBUG_AGE = false
+const DEBUG_COLLISIONS = false
 
 function LeaderBoardDisplay(){
     const MAX_DISPLAYED = 10
@@ -639,6 +640,31 @@ export function Display() {
                 
                 
             })
+        }
+        if (DEBUG_COLLISIONS){
+        const debug_collisions = State.debug_collisions
+        if ( debug_collisions ){
+//            console.log( debug_collisions.length )
+            debug_collisions.forEach( ({item1,item2}) => {
+                let wxy1 =  world_to_context( item1.x, item1.y )
+                let wxy2 =  world_to_context( item2.x, item2.y )
+                $context.fillStyle = 'rgba(255, 0, 0, 0.8)'
+                const side = 20
+                $context.fillRect( wxy1.x - side / 2, wxy1.y - side/2, side, side )
+                $context.fillRect( wxy2.x - side / 2, wxy2.y - side/2, side, side )
+                
+                /*
+                  $context.strokeStyle = 'rgba(255,0,0,0.50)'
+                $context.moveTo( wxy1.x, wxy1.y )
+                $context.beginPath()
+                $context.lineTo(  wxy2.x, wxy2.y )
+                $context.stroke()
+                */
+                
+
+                
+            })
+        }
         }
     }
     function animate(){
