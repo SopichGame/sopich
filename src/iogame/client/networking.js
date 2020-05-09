@@ -110,7 +110,7 @@ export const play = username => {
     sendMessage(Constants.MSG_TYPES.JOIN_GAME, username )
 };
 
-export const sendInputToServer = throttle(20, dir => {
+export const sendInputToServer = throttle(200, dir => {
     sendMessage(Constants.MSG_TYPES.INPUT, dir );
 });
 
