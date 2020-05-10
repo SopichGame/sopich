@@ -19,7 +19,6 @@ function updateMappingByKey(){
             mappingByKey[ key ] = input
         })
     })
-    console.log({mappingByKey})
 }
 
 
