@@ -19,6 +19,7 @@ export const RELATIVE_ATTACHEMENT_POSITION = {
     'below' : 4
 }
 import { Island } from '../object/island.js'
+import { Water } from '../object/water.js'
 
 function normalDirection16(r,a){
     return ( a + (r?4:12) ) % directions16.length
@@ -493,6 +494,9 @@ export function mkSystems( W ){
                         if ( type === HEIGHTMAP_TYPE.island ){
                             const island = Island( heightmap )
                             heightMapFunctions.set( id, island )
+                        } else if ( type === HEIGHTMAP_TYPE.water ){
+                            const water = Water( heightmap )
+                            heightMapFunctions.set( id, water )
                         }
                     }
                 },

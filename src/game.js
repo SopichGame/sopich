@@ -16,8 +16,8 @@ const MAX_PLANES = 10
 const IDLE_IF_NO_PLAYER = true
 const DEBUG_MESSAGES = true
 
-export const DEBUG_COLLISIONS = false
-export const DEBUG_BOUNDING_BOXES = false
+export const DEBUG_COLLISIONS = true
+export const DEBUG_BOUNDING_BOXES = true
 
 //import { ground } from './ground.js'
 import { symbFilterProps,  TARGETS_TYPE, DEBRIS_TYPE_COUNT } from './symbols.js'
@@ -107,6 +107,7 @@ export const COLLISION_CATEGORY = {
     'island' : 1024,
     'radar' : 2048,
     'bonus' : 4096,
+    'water' : 8192,
 }
 const COLLISION_CATEGORY_ALL  = Object.values( COLLISION_CATEGORY ).reduce( (r,x) => r | x, 0 )
 
@@ -114,7 +115,7 @@ import { RELATIVE_ATTACHEMENT_POSITION } from './world/systems.js'
 
 export const HEIGHTMAP_TYPE = {
     'island' : 0,
-    'sea' : 1,
+    'water' : 1,
 }
 export const ATTACK_TYPE = {
     'collision' : 0,
@@ -259,6 +260,31 @@ export function Game( { tellPlayer, // called with user centered world, each wor
     //         })
     //     }
     // }
+    function createWater( ){
+        const waterlevel = 40
+        const waterData = { w : worldSize.w, hmin : waterlevel, hmax : waterlevel  }
+        const water = Items.create({
+            heightmap : { type : HEIGHTMAP_TYPE.water, ...waterData },
+            position : { x : 0, y : 0 },
+            bb : { w : worldSize.w, h : waterlevel },
+            collision : { category : COLLISION_CATEGORY.water,
+                          mask : COLLISION_CATEGORY_ALL ^ ( COLLISION_CATEGORY.island
+                                                            |  COLLISION_CATEGORY.water ) },
+        })
+        // TODO
+        // const removeMe = events.pulse( 10, () => {
+        //     console.log('*******************************')
+        //     console.log('*******************************')
+        //     console.log('*******************************')
+        //     console.log('*******************************')
+        //     console.log('*******************************')
+        //     console.log( Components.heightmap.get( water ) )
+        //     console.log( Components.position.get( water ) )
+        //     console.log( Components.bb.get( water ) )
+            
+        // })
+        
+    }
     function createIslands( { Items }){
         {
             const islandData = {
@@ -279,9 +305,8 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 direction : { a16 : 3 },
                 bb : {  },
                 collision : { category : COLLISION_CATEGORY.island,
-                              mask : COLLISION_CATEGORY_ALL ^ COLLISION_CATEGORY.island,
-                              /* group : 666, */
-                            },
+                              mask : COLLISION_CATEGORY_ALL ^ ( COLLISION_CATEGORY.island
+                                                                | COLLISION_CATEGORY.water ) },
                 attack : { collision : 1000 }
             })
             events.onCollide( island1, (W,_, collideWithId ) => {
@@ -656,6 +681,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         })
     }
     let timeoutid
+    createWater( World ) 
     createIslands( World ) 
     createFlyingBalloon( World )
     createMine( 400,300, 0 )

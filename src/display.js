@@ -1,6 +1,6 @@
 import { prepareImages, ColorSchemes, symbGetInArray } from './symbols.js'
 import { clamp, length } from './utils.js'
-import { worldSize } from './game.js'
+import { worldSize, HEIGHTMAP_TYPE } from './game.js'
 
 const Images = prepareImages()
 const getImage = symbGetInArray( Images, 'iparams' )
@@ -377,46 +377,50 @@ export function Display() {
         trailPoints.display( world_to_context,  $context )
 
         // sea
-        const sea = {     }
-        {
-            $context.fillStyle = 'blue'
-            for ( let i = 0 ; i <= $canvas.width ; i++ ){
-                const wx = worldWindow.left + i
-                let wy = 30
-                    + Math.sin( wx / 16 + Math.sin( Date.now() / 1000 ) )
-                    * Math.sin( Date.now() / 400 )
-                    * 3
-                let cxy = world_to_context( wx, wy )                
-                $context.fillRect(Math.floor(i),
-                                  Math.floor(cxy.y),
-                                  Math.floor(1),
-                                  Math.ceil($canvas.height - cxy.y))
-            }
-        }
+      
+       
         
         // island
         const heightmaps = State.heightmaps
         if ( heightmaps ){
 
             heightmaps.forEach( heightmap => {
-                // TODO : cache
-                const island =  Island( heightmap )
-                $context.fillStyle = 'green'
-                for ( let i = 0 ; i <= $canvas.width ; i++ ){
-                    const wx = worldWindow.left + i
-                    let wy = island.heightAt( heightmap, Math.round( worldWindow.left + i ) )
-                    let wy0 = heightmap.y - island.getDimensions( heightmap ).h / 2
-                    
-                    if ( wy !== undefined ){
-                        let cxy = world_to_context( wx, wy )
-                        let cxy0 = world_to_context( wx, wy0 )
-                        $context.fillRect(Math.floor(i),
-                                          Math.floor(cxy.y),
-                                          Math.floor(1),
-                                          Math.abs( Math.floor(cxy0.y) - Math.floor(cxy.y) ))
+                if ( heightmap.type === HEIGHTMAP_TYPE.island ){
+                    // TODO : cache
+                    const island =  Island( heightmap )
+                    $context.fillStyle = 'green'
+                    for ( let i = 0 ; i <= $canvas.width ; i++ ){
+                        const wx = worldWindow.left + i
+                        let wy = island.heightAt( heightmap, Math.round( worldWindow.left + i ) )
+                        let wy0 = heightmap.y - island.getDimensions( heightmap ).h / 2
+                        
+                        if ( wy !== undefined ){
+                            let cxy = world_to_context( wx, wy )
+                            let cxy0 = world_to_context( wx, wy0 )
+                            $context.fillRect(Math.floor(i),
+                                              Math.floor(cxy.y),
+                                              Math.floor(1),
+                                              Math.abs( Math.floor(cxy0.y) - Math.floor(cxy.y) ))
+                        }
                     }
+                } else if (  heightmap.type === HEIGHTMAP_TYPE.water ){
+                     {
+                         $context.fillStyle = 'blue'
+                         const { hmin, hmax } = heightmap
+                         for ( let i = 0 ; i <= $canvas.width ; i++ ){
+                             const wx = worldWindow.left + i
+                             let wy = hmax
+                                 + Math.sin( wx / 16 + Math.sin( Date.now() / 1000 ) )
+                                 * Math.sin( Date.now() / 400 )
+                                 * 2
+                             let cxy = world_to_context( wx, wy )                
+                             $context.fillRect(Math.floor(i),
+                                               Math.floor(cxy.y),
+                                               Math.floor(1),
+                                               Math.ceil($canvas.height - cxy.y))
+                         }
+                     }
                 }
-
             })
         }
         
