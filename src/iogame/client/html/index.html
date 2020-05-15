@@ -7,6 +7,7 @@
   </head>
   <body>
     <div id="play-menu" class="hidden">
+      <!-- connection -->
       <p>You are <a href="/login"><span id="username"></span></a></p>
       <h1>Sopich</h1> 
       <p id="not-joined-reason" placeholder="" />
@@ -15,7 +16,7 @@
         <img src="favicon.ico"/>
       </p>
       <hr />
-      <!-- <input type="text" id="username-input" placeholder="Username" /> -->
+      <!-- Input mapping -->
       <div id="remap-controls-keydown-zone" class="hidden"></div>
       <button id="remap-controls-button">VIEW / REMAP CONTROLS</button>
       <div id="remap-controls-list" class="hidden">
@@ -52,7 +53,13 @@
           <span class="keyboardmapping" id="remap-control-fireguidedmissile-key"></span>
         </div>
         <button id="remap-controls-reset-button">RESET ALL CONTROLS</button>
-
+      </div>
+      <hr/>
+      <!-- games list -->
+      <div class="games-list">
+        <p>GAMES</p>
+        <div class="game-list-item">Game 1</div>
+        <div class="game-list-item">Game 2</div>
       </div>
       <hr />
       <button id="play-button">PLAY</button>

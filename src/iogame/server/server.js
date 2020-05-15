@@ -154,6 +154,9 @@ const gamesManager = GamesManager()
 function gameDebugMessage( ...p ){
     console.log('[sopich server/game]',...p)
 }
+const Messages = require('../shared/messages.js')
+
+
 function createSopichWebSocketGame( name ){
 
     
@@ -161,7 +164,12 @@ function createSopichWebSocketGame( name ){
     function deserializeMessage( data ){
         try {
             const [ type, body ] = JSON.parse( data )
-            return [ type, body ]
+            if ( type === Constants.MSG_TYPES.INPUT ){
+                // return [ type, Messages.decompressInputsMap( body ) ]
+                return [ type, Messages.decompressToInputsList1( body ) ]
+            } else {
+                return [ type, body ]
+            }
         } catch ( e ){
             return  undefined
         }
@@ -221,7 +229,7 @@ function createSopichWebSocketGame( name ){
             const yourInfo = {
                 username,
                 score : user.score,
-                keyboardMapping : user.keyboardMapping
+                keyboardMapping : user.keyboardMapping,
             }
             send( ws, Constants.MSG_TYPES.YOUR_INFO, yourInfo )
         }
@@ -242,7 +250,12 @@ function createSopichWebSocketGame( name ){
         }
         async function onUserSendsKeyboardMapping( keyboardMapping ){
             gameDebugMessage( username, 'maps keys', keyboardMapping )
-            const rez = await User.updateKeyboardMapping( username, keyboardMapping )
+            const rez = await User.updateKeyboardMapping(
+                username, keyboardMapping
+            )
+        }
+        function onUserAddsEntity( e ){
+            game.handleAddEntity( e )
         }
 
         function dispatchMessage( type, body ){
@@ -258,6 +271,9 @@ function createSopichWebSocketGame( name ){
                 break
             case  Constants.MSG_TYPES.INPUT  :
                 f = onUserSendsInput
+                break
+            case  Constants.MSG_TYPES.ADD_ENTITY  :
+                f = onUserAddsEntity
                 break
             }
             

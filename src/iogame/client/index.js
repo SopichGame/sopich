@@ -1,4 +1,4 @@
-import { connect, play, sendKeyboardMappingToServer } from './networking';
+import { connect, play, sendKeyboardMappingToServer, sendAddEntityToServer } from './networking';
 import { startRendering, stopRendering } from './render';
 import { startCapturingInput, stopCapturingInput } from './input';
 import { initState } from './state';
@@ -30,6 +30,25 @@ Promise.all([
         
         //    setLeaderboardHidden(false);
     };
+    {
+        const model =   {
+            sprite : { type : 8 },// SpriteTypeNum['missile'] },
+            bb : {  },
+            color : { cs : 0 },
+            //r: { r: 0 },
+            /*mass : { mass : 5 },
+            collision : {
+                category : COLLISION_CATEGORY.missile,
+                mask : 0xffff
+            },*/
+            //health : { life : 1, maxlife : 1 },
+            //attack : { collision : 10 },
+            direction : {a16:5}, // copy
+            position : { x : 30, y : 30}, // copy
+            //speed : {} // copy  pps : pps, max : 10, min : 0 },
+        } 
+        // sendAddEntityToServer( model )
+    }
     remapControlsButton.onclick = () => {        
         remapControlsButtonClicked()
     }

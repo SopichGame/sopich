@@ -4,6 +4,7 @@ import { throttle } from 'throttle-debounce';
 import { processGameUpdate } from './state';
 import { stopRendering } from './render'
 import { ADD_PLAYER_RETURNS } from '../../game'
+import * as Messages from '../shared/messages.js'
 
 const Constants = require('../shared/constants');
 
@@ -46,14 +47,14 @@ function onPlayerNotAddedf( joinFailed) {
 }
 function onPlayerAddedf( joinSuccess ){
     return function onPlayerAdded(){
-        console.log('ajoined !')
+        console.log('joined !')
         joinSuccess()
     }
 }
 function onYourInfof( yourInfo ){
     return function (...args){
         yourInfo( ...args )
-        console.log('oooo',this,args)
+        console.log('infos:',this,args)
     }
 }
 function deserializeMessage( data ){
@@ -109,11 +110,82 @@ export const connect = (onGameOver,joinSuccess,joinFailed,yourInfo) => (
 export const play = username => {
     sendMessage(Constants.MSG_TYPES.JOIN_GAME, username )
 };
+// Throttling enforces a maximum number of times a function can be called over time. As in
+// “execute this function at most once every 100 milliseconds.”
 
-export const sendInputToServer = throttle(200, dir => {
-    sendMessage(Constants.MSG_TYPES.INPUT, dir );
-});
+// Debouncing enforces that a function not be called again until a certain amount of time has passed without it being called. As in
+// “execute this function only if 100 milliseconds have passed without it being called.”
+// = send if no burst, after a delay after a burst
+
+function aggregateAsList( aggregated, input ){
+    if ( input ){
+        if ( aggregated ){
+            return [ ...aggregated, input ]
+        } else {
+            return [ input ]
+        }
+    } else {
+        return aggregated
+    }
+}
+function aggregateAsMap( aggregated, input ){
+    // do not preserver input order
+    if ( input ){
+        if ( aggregated ){
+            aggregated.set( input, 1 + ( aggregated.get( input ) || 0 ) )
+            return aggregated
+        } else {
+            const map = new Map()
+            map.set( input, 1 )
+            return map
+        }
+    } else {
+        return aggregated
+    }
+}
+function aggregateThrottle( delay, aggregate, f ){
+    // while throttled, each f call argument is passed
+    // to an aggregate function which aggregated result
+    // is passed to the f function
+    let aggregated
+    let to
+    function treat(){
+        if ( aggregated ){
+            f( aggregated )
+            clearTimeout( to )
+            aggregated = undefined
+            to = setTimeout( treat, delay )                  
+        } else {
+            to = undefined
+        }
+    }    
+    return function oninput( input ){
+        aggregated = aggregate( aggregated, input )
+        if ( to === undefined ){
+            treat()
+        }
+    }
+}
+
+// 4 keys per second is enough
+const Options = {
+    inputThrottleDelay : 1000 / 4 // 1000 * 4 // 1000 / 4
+}
+export const sendInputToServer = aggregateThrottle(
+    Options.inputThrottleDelay,
+    
+    // aggregateAsMap, dir => {
+    //     sendMessage(Constants.MSG_TYPES.INPUT, Messages.compressInputsMap(dir) )
+    // }
+    aggregateAsList, dir => {
+        sendMessage(Constants.MSG_TYPES.INPUT, Messages.compressInputsList1( dir ) )        
+    }
+)
 
 export const sendKeyboardMappingToServer = mapping => {
     sendMessage(Constants.MSG_TYPES.KEYBOARD_MAPPING, mapping );
 }
+export const sendAddEntityToServer = model => {
+    sendMessage(Constants.MSG_TYPES.ADD_ENTITY, model );
+}
+

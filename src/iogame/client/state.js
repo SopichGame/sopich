@@ -1,6 +1,7 @@
 // The "current" state will always be RENDER_DELAY ms behind server time.
 // This makes gameplay smoother and lag less noticeable.
 const RENDER_DELAY = 150
+const NO_INTERPOLATION = false
 
 const gameUpdates = [];
 let gameStart = 0;
@@ -73,7 +74,7 @@ export function getCurrentState() {
 
     // If base is the most recent update we have, use its state.
     // Otherwise, interpolate between its state and the state of (base + 1).
-    if (base < 0 || base === gameUpdates.length - 1) {
+    if ( NO_INTERPOLATION || (base < 0 || base === gameUpdates.length - 1) ){
         const update = gameUpdates[gameUpdates.length - 1]
         return update
         
@@ -89,13 +90,14 @@ export function getCurrentState() {
     }
 }
 function linearInterpolation( v1, v2, ratio ){
-    let d = ( v2 - v1 )
-    if ( ( d > 16 ) || ( d < -16 ) ){
-        // todo...
-        return v2
-    } else {
-        return v1 + ( v2 - v1 ) * ratio
-    }
+    // let d = ( v2 - v1 )
+    // if ( ( d > 16 ) || ( d < -16 ) ){
+    //     // todo...
+    //     return v2
+    // } else {
+    //     return v1 + ( v2 - v1 ) * ratio
+    // }
+    return v1 + ( v2 - v1 ) * ratio
 }
 function a816Interpolation( v1, v2, ratio ){
     if ( ratio > 0.5 ){
