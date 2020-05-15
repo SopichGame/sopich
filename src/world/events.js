@@ -39,15 +39,25 @@ export function mkEvents( World ){
     }
     function stepTimeout(){
         fsByTimeoutId.forEach( ( fs, toId ) => {
+            
+            const timeout = World.Components.timeout.get( toId )
+            if ( timeout === undefined ){
+                fsByTimeoutId.delete( toId )
+                return
+            }
+                
             const isOn = World.Systems.timeout.isOn( toId ) 
             if ( isOn ){
 
                 // execute callbacks
                 fs.forEach( f => f(World, toId ) )
 
-                const timeout = World.Components.timeout.get( toId )
+                const timeout = World.Components.timeout.get( toId ) 
+                if ( timeout === undefined ){
+                    fsByTimeoutId.delete( toId )
+                    return
+                }
 
-                
                 let over 
                 if ( timeout.loop ){
                     over = false

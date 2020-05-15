@@ -27,6 +27,7 @@ export function mkWorld( ){
             if ( system.onStep )
                 system.onStep( version )
         })
+        World.Events.step( World )
     }
     const orderedComponents = Object.entries( World.Components )
     return Object.assign(

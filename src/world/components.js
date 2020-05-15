@@ -65,6 +65,11 @@ export function mkComponents(){
                 /* type, */ playerName, targetId, timeoutId, commands
             })            
         }),
+        placement :  cmpStrg( {
+            copy : ( {  x1, y1, x2, y2 } ) => ( {
+                 x1, y1, x2, y2
+            } )
+        }),
         sprite :  cmpStrg( {
             copy : ( { type, subtypes } ) => ( {
                 type, subtypes

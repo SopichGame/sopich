@@ -160,6 +160,49 @@ export function mkSystems( W ){
             }
         })(),
         ( () => {
+            const { Components } = W,
+                  countById = new Map()
+            return {
+                name : 'placer', // TODO placement + position
+                onStep : () => {
+                    W.Components.placement.forEach( ([id]) => {
+
+                        const position = Components.position.get( id )
+                        if  ( position === undefined )
+                            return
+                        
+                        const placement = Components.placement.get( id ),
+                              { x1, y1, x2, y2 } = placement,
+                              x = x1 + ( x2 - x1 ) * Math.random(),
+                              y = x1 + ( x2 - x1 ) * Math.random()
+                        
+                        position.x = x
+                        position.y = y
+                        countById.set( id, 0 )
+                    })
+                },
+                onComponentChange : id => {
+                    if ( Components.placement.has( id ) )
+                        return
+                    countById.delete( id )
+                },
+                onRemove : countById.delete.bind( countById ),
+                isAvailable : id => {
+                    const count = countById.get( id )
+                    return ( count === 0 )
+                },
+                getOccupation : id => {
+                    return countById.get( id )
+                },
+                addOccupation : id => {
+                    const count = countById.get( id )
+                    if ( count === undefined )
+                        return
+                    countById.set( id, count + 1 )
+                }
+            }
+        })(),
+        ( () => {
             return {
                 name : 'cipiu'
             }
@@ -524,13 +567,16 @@ export function mkSystems( W ){
             }
         })(),
         ( () => {
-            const ids = new Set(),
+            const { Components  } = W,
+                  ids = new Set(),
                   add = ids.add.bind( ids ),
                   remove = ids.delete.bind( ids ),
                   has = ids.has.bind( ids ),
-                  condition = id => ( ( Components.sprite.has( id ) || (Components.heightmap.has( id ) ) )
+                  condition = id => ( ( Components.sprite.has( id )
+                                        || Components.heightmap.has( id )
+                                        // || (Components.placement.has( id ) )
+                                      )
                                       && Components.bb.has( id ) )
-            const { Components  } = W
             return {
                 name : 'boundingboxesandmasks',
                 onAdded : conditionalAdded( add )( condition ),
@@ -564,7 +610,9 @@ export function mkSystems( W ){
                         const { w, h } = getSpriteDimensions( sprType, sprData )
                         bb.w = w
                         bb.h = h
-                    }
+
+                        return
+                    } 
                     const heightmap = Components.heightmap.get( id ) 
                     if ( heightmap ){
                         const { w, h } = W.Systems.heightmap.getDimensions( id )
@@ -576,7 +624,15 @@ export function mkSystems( W ){
                             //position.y = bb.h / 2
                             //console.log('HERE', bb, position)
                         }
+                        return
                     }
+                    // const placement = Components.placement.get( id )
+                    // if ( placement ) {
+                    //     const { w, h } = placement
+                    //     bb.w = w
+                    //     bb.h = h
+                    //     return
+                    // }
                 })
             }
         })(),
@@ -653,13 +709,17 @@ export function mkSystems( W ){
                         W.Systems.health.inflictDamage( id1, collisionAttack /*{ quality : 0, quantity : 1 } */)
                     }
                 }
+                const placement = W.Components.placement.get( id1 )
+                if ( placement ){
+                    W.Systems.placer.addOccupation( id1 )
+                }
             }
             function collisionBottomHitbox12( id1, id2, box1, box2 ){
                 const sprite = Components.sprite.get( id1 )
                 const heightmap = Components.heightmap.get( id2 )
                 if ( sprite && heightmap ){
 
-                    const player = Components.player.get( id1 )
+                    //const player = Components.player.get( id1 )
                     //  if ( player ){
                     const spritePosition = Components.position.get( id1 )
                     const spriteDirection = Components.direction.get( id1 )
@@ -755,6 +815,7 @@ export function mkSystems( W ){
                             if ( bottom === false )
                                 return 
                         }
+                        
                         lastColls.push( { id1, id2, box1, box2 } )
                         
                         handleCollision12( id2, id1, box2, box1 )
