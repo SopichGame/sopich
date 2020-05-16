@@ -121,7 +121,6 @@ export const ATTACK_TYPE = {
     'collision' : 0,
 }
 
-
 //import { Island } from './object/island.js'
 export function Game( { tellPlayer, // called with user centered world, each world update 
                         tellScore,  // called with player score, when quitting
@@ -129,6 +128,17 @@ export function Game( { tellPlayer, // called with user centered world, each wor
     const World = mkWorld()
     const { Components, Systems, Items, Events } = World
     const seed = "braoume"
+    function EventsWatchUntil( condition, f, interval = 1 ){
+        const timeoutId = Events.pulse( interval, watchF )
+        function watchF(){
+            if ( condition( World ) ){
+                const timeout =  Components.timeout.get( timeoutId )
+                if ( timeout === undefined ) return
+                Items.remove( timeoutId )
+                f( World )
+            }
+        }
+    }
     
     function dbgItems( printUndefined = false){
         console.log('<=---', 'version', World.getVersion() )
@@ -509,41 +519,29 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         } )
 
     }
-    function createPlacer( f, { w, h }, { x1, y1, x2, y2 } = worldSize ){        
-
-        const radarId = Items.create( {
+    function createPlacer( { x1, y1, x2, y2 }, intervalle, onFreePosition, props ){        
+        
+        const radarId = Items.create( Object.assign({
             placement : { x1, y1, x2, y2 },
             collision : {
                 category : COLLISION_CATEGORY.radar,
                 mask : COLLISION_CATEGORY_ALL ^ ( COLLISION_CATEGORY.radar )
             },
             position : { },
-            bb : { w, h }
-        })
+        }, props ))
 
-        /*
-        function watchUntil( condition, f, interval = 1 ){
-            const timeoutId = Events.pulse( interval, watchF )
-            function watchF(){
-                if ( condition( World ) ){
-                    const timeout =  Components.timeout.get( timeoutId )
-                    if ( timeout === undefined ) return
-                    Items.remove( timeoutId )
-                    f( World )
-                }
-            }
-        }
-        watchUntil(
+        
+        EventsWatchUntil(
             () => Systems.placer.isAvailable( radarId ),
             () => {
                 const position = Components.position.get( radarId )
                 if ( position === undefined ) return
                 Items.remove( radarId )
-                f( position )
+                onFreePosition( position )
             },
-            10
-        )*/
-        
+            intervalle
+        )
+        /*
         const timeoutId = Events.pulse( 1, watchAvailable )
         function watchAvailable(){
 
@@ -562,10 +560,10 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             // call f
             f( position )
         }        
-        
+        */
     }
     function createAndPlacePlayer( name, score, colorScheme ) {
-        createPlacer( ( freePosition ) => {
+        createPlacer( worldSize, 1, ( freePosition ) => {
             console.log('occupation', freePosition, 'isAvailable' )
             const id = createPlayer( name, score, colorScheme )
             const position = Components.position.get( id )
@@ -575,7 +573,10 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 position.y = freePosition.y
                 console.log('->set position',position)
             }
-        }, { w : 128, h : 128 }, worldSize )
+        }, {
+            bb : { w : 128, h : 128 },
+            player : { name }
+        })
     }
     function createPlayer( name, score, colorScheme ){
                 
@@ -655,6 +656,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         
         Events.onDeath( id1, ( World, id ) => {
             const player = Components.player.get( id )
+
             // TODO propchange
             const toId = Items.create( { timeout : { start : World.getVersion(), delay  : 20,  } } )
             const skelId = planeSkeletton( World, {
@@ -671,7 +673,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             const color = Components.color.get( id )
             
             Events.onTimeoutId( toId, W => {
-                createPlayer( player.name, player.score )
+                createAndPlacePlayer( player.name, player.score )
                 Items.remove( skelId )
             })
         })
@@ -751,11 +753,11 @@ export function Game( { tellPlayer, // called with user centered world, each wor
     createWater( World ) 
     createIslands( World ) 
     createFlyingBalloon( World )
-    for ( let i = 0 ; i < 3000 ; i += 120 ){
-        createMine( i, 200, 0 )
-        createMine( i+50,300, 0 )
-        createMine( i+100,400, 1 )
-    }
+    new Array(20).fill(0).map( () => {
+        const x = worldSize.x1 + Math.random() * worldSize.w
+        const y = worldSize.y1 + Math.random() * worldSize.h
+        createMine( x, y, 0 )
+    })
     //createMine( 400,300, 0 )
     //createMine( 200,400, 1 )
 
@@ -821,6 +823,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
     }
     function sendUpdate(){
         const categ = {
+            placers : [],
             planes : [],
             balloons : [],
             oxs : [],
@@ -850,7 +853,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         if ( categ._lastcolls ){
             categ._lastcolls = Systems.collision.getCollidingPairs()
         }
-        
+        const idByName = new Map()
         Items.forEach( (id,i) => {
             const sprite = Components.sprite.get( id ),
                   position = Components.position.get( id ),
@@ -860,8 +863,21 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                   animation = Components.animation.get( id ),
                   heightmap = Components.heightmap.get( id ),
                   bb = Components.bb.get( id ),
-                  color = Components.color.get( id )
+                  color = Components.color.get( id ),
+                  placement = Components.placement.get( id )
 
+            if ( placement !== undefined ){
+                categ.placers.push({
+                    id,
+                    x : position.x,
+                    y : position.y,
+                })
+            }
+
+            if ( player !== undefined ){
+                idByName.set( player.name, id )
+            }
+            
             if ( categ._boundingboxes ){
                 if ( bb && position ){
                     categ._boundingboxes.push( {
@@ -1008,8 +1024,9 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         )
         Components.player.forEach( ([ playerId, player ]) => {
             const { name } = player
-            const mePlaneIdx = categ.planes.findIndex( ( plane ) => plane.name === name )
-            const me = { 'type' : 'planes' , idx:mePlaneIdx,  id : categ.planes[ mePlaneIdx ].id  }
+            //const mePlaneIdx = categ.planes.findIndex( ( plane ) => plane.name === name )
+            //const me = { id : categ.planes[ mePlaneIdx ].id  }
+            const me = { id : idByName.get( name ) }
             const update = Object.assign(
                 commonUpdate,
                 { me }

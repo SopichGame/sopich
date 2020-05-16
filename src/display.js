@@ -195,6 +195,25 @@ function TrailPoints(){
     }
     return { add, display }
 }
+function findPlayerPosition( State ){
+    if ( State === undefined ) return
+    const me = State.me
+    if ( me === undefined ) return 
+    const meId = me.id
+    if ( meId === undefined ) return
+    for ( let [a,k] of Object.entries( State ) ){
+        if ( Array.isArray( k ) ){
+            const found = k.find( item => {
+                if ( item && item.id && (item.id === meId )){
+                    return item
+                }
+            })
+            if ( found !== undefined )
+                return found
+        }
+    }
+}
+
 export function Display() {
 
 
@@ -243,12 +262,13 @@ export function Display() {
         if ( !State ) {
             return
         }
+        /*
         if ( ! State.planes ){
             return 
         } 
         if ( ! State.planes.length ){
             return 
-        }
+        }*/
         const leaderboard = State.leaderboard
         if ( leaderboard ){
             leaderboardDisplay.update( leaderboard ) 
@@ -256,12 +276,15 @@ export function Display() {
 
         const me = State.me
 
+
+
         /*
          * camera
          */
-        const camera_target = Object.assign({}, State[ me.type ][ me.idx ] )
-
-        
+        //const camera_target = Object.assign({}, State[ me.type ][ me.idx ] )
+        // console.log('PLAYER IS',findPlayerPosition( State ))
+        const camera_target = Object.assign({}, findPlayerPosition( State ) )
+        console.log(camera_target)
         if ( last_camera_target === undefined ){
             last_camera_target = camera_target
         } else {
@@ -468,7 +491,7 @@ export function Display() {
         
         const planes = State.planes
         if ( planes ){
-            State.planes.forEach( (plane,planeIdx) => {
+            State.planes.forEach( (plane) => {
                 const { human, reckless, age, ttl, x, y, r, a, p, cs, score, value,  name } = plane
 
 
@@ -497,7 +520,7 @@ export function Display() {
                 let rgb = ( human === true )?`rgb(${col[0]},${col[1]},${col[2]})`:'gray'
                 $context.fillStyle = rgb
 
-                const is_target_plane = (  me.idx === planeIdx )
+                const is_target_plane = (  me.id === plane.id )
                 function target_helper( position_helper_ttl, position_helper_max_ttl ){
                     const remain = position_helper_max_ttl -  position_helper_ttl
                     const ratio = 1
