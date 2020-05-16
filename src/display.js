@@ -284,7 +284,7 @@ export function Display() {
         //const camera_target = Object.assign({}, State[ me.type ][ me.idx ] )
         // console.log('PLAYER IS',findPlayerPosition( State ))
         const camera_target = Object.assign({}, findPlayerPosition( State ) )
-        console.log(camera_target)
+        //        console.log(camera_target)
         if ( last_camera_target === undefined ){
             last_camera_target = camera_target
         } else {

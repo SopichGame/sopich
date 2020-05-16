@@ -55,7 +55,12 @@ export function getRelativeAttachementPosition( { a8 = 0, a16 = a8 * 2 } = {}, {
         y : dir[1] * radius
     }
 }
-
+const BoundAngleSymetry16 = {
+    'r' : [8,7,6,5, 4,5,6,7, 8,9,10,11, 12,11,10,9],
+    'l' : [0,1,2,3, 4,3,2,1, 0,15,14,13, 12,13,14,15],
+    't' : [0,15,14,13, 12,11,10,9, 8,9,10,11, 12,13,14,15],
+    'b' : [0,1,2,3, 4,5,6,7, 8,7,6,5, 4,3,2,1 ]
+}
 
 export function mkSystems( W ){
 
@@ -657,8 +662,48 @@ export function mkSystems( W ){
                             right -= bb.w / 2
                             top -= bb.h / 2
                         }
-                        position.x = clamp( position.x, left, right )
-                        position.y = clamp( position.y, bottom, top )
+                        const worldbounds = Components.worldbounds.get( id )
+                        const direction =  Components.direction.get( id )
+                        let bounce = ( ( direction !== undefined )
+                                       && ( direction.a16 !== undefined ) ), // TODO a8
+                            die = false,
+                            noclamp =false
+                        
+                        if ( worldbounds ){
+                            bounce = bounce && ( worldbounds.nobounce !== true )
+                            die = worldbounds.die
+                            noclamp = worldbounds.noclamp
+                        }
+                        const { x, y } = position
+
+                        let isOut = false
+                        if ( x > right ){
+                            if ( bounce )
+                                direction.a16 = BoundAngleSymetry16.r[ direction.a16 ]
+                            isOut = true
+                        } else if ( x < left ){
+                            if ( bounce )
+                                direction.a16 = BoundAngleSymetry16.l[ direction.a16 ]
+                            isOut = true
+                        } 
+                        if ( y > top ){
+                            if ( bounce )
+                                direction.a16 = BoundAngleSymetry16.t[ direction.a16 ]
+                            isOut = true
+                        } else if ( y < bottom ){
+                            if ( bounce )
+                                direction.a16 = BoundAngleSymetry16.b[ direction.a16 ]
+                            isOut = true
+                        }
+                        if ( isOut && die ){
+                            W.Items.remove( id )
+                            return 
+                        }
+                        if ( !noclamp ){
+                            position.x = clamp( position.x, left, right )
+                            position.y = clamp( position.y, bottom, top )
+                        }
+                        
                     })
                     
                 }

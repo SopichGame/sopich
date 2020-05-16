@@ -143,6 +143,11 @@ export function mkComponents(){
                 collision
             })
         }),
+        worldbounds : cmpStrg( {
+            copy : ( { nobounce, die, noclamp } ) => ( {
+                nobounce, die, noclamp
+            })
+        }),
         
 
     }

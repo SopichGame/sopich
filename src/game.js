@@ -16,8 +16,8 @@ const MAX_PLANES = 10
 const IDLE_IF_NO_PLAYER = true
 const DEBUG_MESSAGES = true
 
-export const DEBUG_COLLISIONS = true
-export const DEBUG_BOUNDING_BOXES = true
+export const DEBUG_COLLISIONS = false
+export const DEBUG_BOUNDING_BOXES = false
 
 //import { ground } from './ground.js'
 import { symbFilterProps,  TARGETS_TYPE, DEBRIS_TYPE_COUNT } from './symbols.js'
@@ -514,7 +514,8 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 attack : { collision : 10 },
                 direction : {}, // copy
                 position : {}, // copy
-                speed : {} // copy  pps : pps, max : 10, min : 0 },
+                speed : {}, // copy  pps : pps, max : 10, min : 0 },
+                worldbounds : { die : true },
             } }
         } )
 
@@ -581,7 +582,6 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         }, {
             bb : { w : 128, h : 128 },
             player : { name },
-            removeWith : { ids : [] }
         })
     }
     function createPlayer( name, score, colorScheme ){
@@ -598,7 +598,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             player : { name, score : 2 },
             position : { x : 200 + Math.random() * 800, y : 200 },
             direction : { a16 : 0 },
-            propulsor : { power : 1, min : 0, max : 8 },
+            propulsor : { power : 7, min : 0, max : 8 },
             speed : { pps : 0, max : 8, min : 0 },
             sprite : { type : SpriteTypeNum['plane'] },
             r : { r : 0 },
@@ -611,7 +611,9 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             mass : { mass : 1 },
             color : { cs : colorScheme },
             attack : { collision : 10 },
-            health : { life : 10, maxLife : 10 }
+            health : { life : 10, maxLife : 10 },
+            worldbounds : { /*nobounce : true*/ },
+
         } )
         
         // dir & speed & r
@@ -715,7 +717,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                           
         })
         const radar = attachRadar( bonus, {
-            bb : { w : 200, h : 300 },
+            bb : { w : 64, h : 64 },
             collision : { category : COLLISION_CATEGORY.radar,
                           mask : COLLISION_CATEGORY.plane }
         } )
@@ -771,6 +773,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
 
         })
     }
+    function iii(){
     let timeoutid
     createWater( World ) 
     createIslands( World ) 
@@ -780,6 +783,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         const y = worldSize.y1 + Math.random() * worldSize.h
         createMine( x, y, 0 )
     })
+    }
     //createMine( 400,300, 0 )
     //createMine( 200,400, 1 )
 
