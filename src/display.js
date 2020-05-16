@@ -172,9 +172,14 @@ function TrailPoints(){
         const now = Date.now()
         const minAge = 130
         const maxAge = 1000
-        trailPoints.filter( x => x !== undefined ).forEach( ({x,y,color,spread,size,date}) => {
+        trailPoints.filter( x => x !== undefined ).forEach( pt => {
+            const {ox, oy, x,y,color,spread,size,date, expl} = pt
             const age = now - date
             if ( ( age > minAge) && ( age < maxAge ) ){
+
+                
+                
+                
                 const prog =  1 - ( (age - minAge) / (maxAge-minAge) )
                 let cxy = world_to_context( x, y )
                 $context.fillStyle = color
@@ -183,13 +188,17 @@ function TrailPoints(){
                 const s = size * prog
                 const ss = -1 * s/4
                 //$context.fillRect( cxy.x + r1 -ss, cxy.y+r2-ss, s, s)
-                $context.fillRect( cxy.x + r1 + ss, cxy.y + r2 + ss, s, s )
+                const nx = cxy.x + r1 + ss,
+                      ny = cxy.y + r2 + ss
+                pt.x += r1 + ss
+                pt.y += r2 + ss
+                $context.fillRect( nx, ny , s, s )
             }
         })
     }
-    function add(x,y,color,spread,size){
+    function add(x,y,color,spread,size,expl){
         if ( trailPoints.length ){
-            trailPoints[ currentTrailPointIdx ] = { x, y, color, spread, size, date : Date.now() }
+            trailPoints[ currentTrailPointIdx ] = { ox : x, oy : y, x, y, color, spread, size, date : Date.now(), expl }
             currentTrailPointIdx = ( currentTrailPointIdx + 1 ) % trailPoints.length        
         }
     }
@@ -495,9 +504,11 @@ export function Display() {
                 const { human, reckless, age, ttl, x, y, r, a, p, cs, score, value,  name } = plane
 
                 if ( plane.lf < 0 ){
-                    trailPoints.add( x, y,  TrailColors.falling, 2, 1 )
+                    trailPoints.add( x, y,  TrailColors.falling, 3, 2 )
                 }
-                
+                if ( plane.dmg ){
+                    trailPoints.add( x, y,  TrailColors.debris, 4, 2 )
+                }
                 if ( ttl < 0 ){
                     return
                 }
@@ -555,7 +566,7 @@ export function Display() {
                       wxy.x ,  wxy.y + 18 )*/
                     //prefix = '?'
                 }
-                if (  !  is_target_plane  ){
+                //if (  !  is_target_plane  ){
                     //if ( human === true ){
                     $context.font = `${ 10  }px monospace`;
 
@@ -593,7 +604,7 @@ export function Display() {
                             
                     //}
                     }   
-                }
+                //}
                 
                 /*
                   

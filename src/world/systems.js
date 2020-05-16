@@ -873,6 +873,10 @@ export function mkSystems( W ){
         ( () => {
             const damage = new Map()
             const death = new Set()
+            const tookdamage = new Set()
+            function didTakeDamage( id ){
+                return tookdamage.has( id )
+            }
             const { Components } = W
             function isAlive( id ){
                 const health = Components.health.get( id )
@@ -929,6 +933,7 @@ export function mkSystems( W ){
             }
             function onStep( ){
                 death.clear()
+                tookdamage.clear()
                 damage.forEach( ( list, id ) => {
                     const health = Components.health.get( id )
                     //console.log('-',id,health,list)
@@ -942,6 +947,7 @@ export function mkSystems( W ){
                     if ( aliveBefore && (!aliveAfter ) ){
                         death.add( id )
                     }
+                    tookdamage.add( id )
                 })
                 damage.clear()
             }
@@ -951,7 +957,8 @@ export function mkSystems( W ){
                 inflictDamage,
                 isAlive,
                 justDied,
-                getDeathList
+                getDeathList,
+                didTakeDamage,
             }
         })(),
         ( () => {
