@@ -15,7 +15,8 @@ function cmpStrg( { copy } ){
             for ( let [ id, prop ] of props.entries() ){
                 f([id,prop])
             }
-        }
+        },
+        entries : props.entries.bind( props )
     }
 }
 export function mkComponents(){

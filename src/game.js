@@ -8,7 +8,7 @@
 // - missiles outside
 // - radar
 // balloon/basket actuators
-
+// - player placement
 const IA_DOES_NOT_FIRE = false
 const IA_JUST_FLIES_AROUND = false
 const FIRST_PLANE_CANNOT_BE_DESTRUCTED = false
@@ -39,10 +39,10 @@ function debugMessage( ...p ){
 
 export const worldSize = {
     x1 : 0,
-    x2 : 1500,
+    x2 : 2500,
     y1 : 0,
     y2 : 800,
-    w : 1500,
+    w : 2500,
     h : 800
 }
 export const ADD_PLAYER_RETURNS = {
@@ -563,6 +563,11 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         */
     }
     function createAndPlacePlayer( name, score, colorScheme ) {
+
+        const found = firstPlayerByName( name )
+        if ( found )
+            return
+        
         createPlacer( worldSize, 1, ( freePosition ) => {
             console.log('occupation', freePosition, 'isAvailable' )
             const id = createPlayer( name, score, colorScheme )
@@ -575,7 +580,8 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             }
         }, {
             bb : { w : 128, h : 128 },
-            player : { name }
+            player : { name },
+            removeWith : { ids : [] }
         })
     }
     function createPlayer( name, score, colorScheme ){
@@ -645,37 +651,52 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                              commands : ['firemissile'] }
             })
         }
-        const radarId = attachRadar( id1, {
+        /*const radarId = attachRadar( id1, {
             //bb : { w : 64, h : 128 }
-        })
-        
-        Events.onCollide( radarId, (W,_, collideWith ) => {
-            //console.log('radar saw',collideWith)
-        })
-                                              
-        
-        Events.onDeath( id1, ( World, id ) => {
+            })*/
+        function dieAndRespawn( id ){
+            const toId = Items.create(
+                { timeout : { start : World.getVersion(), delay  : 60  }}
+            )
             const player = Components.player.get( id )
-
-            // TODO propchange
-            const toId = Items.create( { timeout : { start : World.getVersion(), delay  : 20,  } } )
-            const skelId = planeSkeletton( World, {
-                player : Components.player.get( id ),
-                sprite : Components.sprite.get( id ),
-                position : Components.position.get( id ),
-                direction : Components.direction.get( id ),
-                r : Components.r.get( id ),
-                bb : {},
-                color : Components.color.get( id )
-            })
-            Items.remove( id )
-
             const color = Components.color.get( id )
             
             Events.onTimeoutId( toId, W => {
+                Items.remove( id )
                 createAndPlacePlayer( player.name, player.score )
-                Items.remove( skelId )
+                //Items.remove( skelId )
             })
+            
+        }
+        let crashed = false
+        let deadInAir = false
+        Events.onCollide( id1, (W,_, collideWith ) => {
+            if ( Components.heightmap.has( collideWith ) ){
+                if ( crashed === false ){
+                    crashed = true
+                    Items.change( id1, { propulsor : false,
+                                         mass : false,
+                                         speed : false } )
+                    Items.remove( actId1 )
+                    if  ( deadInAir ){
+                        dieAndRespawn( id1 )
+                    }
+                }
+            }
+        })
+                                              
+        Events.onDeath( id1, ( World, id ) => {
+            if ( crashed ) {
+                console.log('crash death')
+                dieAndRespawn( id1 )
+            } else {
+                deadInAir = true
+                console.log('in-air death')
+                
+                Items.change( id, { propulsor : false } )
+                Items.remove( actId1 )
+            }
+
         })
         return id1
     }    
@@ -689,7 +710,8 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             color : { cs : 0 },
             bb : {},
             collision : { category : COLLISION_CATEGORY.bonus,
-                          mask : COLLISION_CATEGORY_ALL ^ COLLISION_CATEGORY.bonus }
+                          mask : COLLISION_CATEGORY_ALL ^ COLLISION_CATEGORY.bonus },
+            attack : { collision : 1000 }
                           
         })
         const radar = attachRadar( bonus, {
@@ -864,8 +886,9 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                   heightmap = Components.heightmap.get( id ),
                   bb = Components.bb.get( id ),
                   color = Components.color.get( id ),
-                  placement = Components.placement.get( id )
-
+                  placement = Components.placement.get( id ),
+                  health = Components.health.get( id )
+                  
             if ( placement !== undefined ){
                 categ.placers.push({
                     id,
@@ -969,8 +992,13 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                             a16 : direction.a16,
                             r : ((r)?(r.r):0),
                             sprt : sprite.type,
-                        })
+                        }),
                     })
+                    if ( health ){
+                        categ.planes[ categ.planes.length - 1].lf = health
+                            ?(health.life):undefined
+                        
+                    }
                     /*
                       categ.planes.push({
                       id : id,
@@ -1035,15 +1063,34 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         })
     }
 
-    
+    function firstPlayerByName( name ){
+        for ( const [id,player] of Components.player.entries() ){
+            console.log('look for',name,'in',id,player)
+            if ( player.name === name ){                
+                return id
+            }
+        }
+    }
     function addPlayer( name, _, score ){
-        createAndPlacePlayer( name, score )
-        //createPlayer( name, score )
-        dbgItems()
-        return ADD_PLAYER_RETURNS.OK
+        const found = firstPlayerByName( name )
+        if ( found !== undefined ){
+            console.log('ALREADYU EXISTS')
+            return ADD_PLAYER_RETURNS.ALREADY_JOINED
+        } else {
+            createAndPlacePlayer( name, score )
+            //createPlayer( name, score )
+            // dbgItems()
+            return ADD_PLAYER_RETURNS.OK
+        }
     }
     function removePlayer( name ){
         console.log('please remove',name)
+        const found = firstPlayerByName( name )
+        if ( found ){
+            console.log('finished for',name,found)
+            Items.remove( found )
+        }
+        /*
         Components.player.forEach( ([ playerId, player ]) => {
             console.log('is it',playerId, player)
             if ( name === player.name ){
@@ -1053,8 +1100,9 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         })
         setTimeout( function(){
             console.log('post mortem')
-            dbgItems()
+            // dbgItems()
         },1000)
+        */
     }
     function getPlayers(){
     }    

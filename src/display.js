@@ -494,7 +494,9 @@ export function Display() {
             State.planes.forEach( (plane) => {
                 const { human, reckless, age, ttl, x, y, r, a, p, cs, score, value,  name } = plane
 
-
+                if ( plane.lf < 0 ){
+                    trailPoints.add( x, y,  TrailColors.falling, 2, 1 )
+                }
                 
                 if ( ttl < 0 ){
                     return
