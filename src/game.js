@@ -141,6 +141,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
     }
     
     function dbgItems( printUndefined = false){
+        return
         console.log('<=---', 'version', World.getVersion() )
         Items.forEach( id => {
             World.forEachComponent( ([ componentName, componentProps ]) => {
@@ -280,18 +281,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                                                             |  COLLISION_CATEGORY.water ) },
             attack : { collision : 1000 }
         })
-        // TODO
-        // const removeMe = Events.pulse( 10, () => {
-        //     console.log('*******************************')
-        //     console.log('*******************************')
-        //     console.log('*******************************')
-        //     console.log('*******************************')
-        //     console.log('*******************************')
-        //     console.log( Components.heightmap.get( water ) )
-        //     console.log( Components.position.get( water ) )
-        //     console.log( Components.bb.get( water ) )
-        
-        // })
+
         
     }
     function createIslands( { Items }){
@@ -574,10 +564,10 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             const id = createPlayer( name, score, colorScheme )
             const position = Components.position.get( id )
             if ( position ){
-                console.log('set position',position)
+                //console.log('set position',position)
                 position.x = freePosition.x
                 position.y = freePosition.y
-                console.log('->set position',position)
+                //console.log('->set position',position)
             }
         }, {
             bb : { w : 128, h : 128 },
@@ -643,7 +633,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             })
             const timeoutId3 = Items.create( {
                 removeWith : { ids:[id1] },
-                timeout : { start : version,  delay : 5,  resetable : true }
+                timeout : { start : version,  delay : 10,  resetable : true }
             })
             const actLauncherId1  = Items.create(  {
                 removeWith : { ids:[id1] },
@@ -689,11 +679,11 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         
         Events.onDeath( id1, ( World, id ) => {
             if ( crashed ) {
-                console.log('crash death')
+                //console.log('crash death')
                 dieAndRespawn( id1 )
             } else {
                 deadInAir = true
-                console.log('in-air death')
+                //console.log('in-air death')
                 
                 Items.change( id, { propulsor : false } )
                 Items.remove( actId1 )
@@ -865,7 +855,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             _lastcolls : []
         }
         if ( !DEBUG_BOUNDING_BOXES ){
-            delete categ._boudingboxes
+            delete categ._boundingboxes
         }
         if ( !DEBUG_COLLISIONS ){
             delete categ._lastcolls
@@ -1074,7 +1064,6 @@ export function Game( { tellPlayer, // called with user centered world, each wor
 
     function firstPlayerByName( name ){
         for ( const [id,player] of Components.player.entries() ){
-            console.log('look for',name,'in',id,player)
             if ( player.name === name ){                
                 return id
             }
@@ -1083,7 +1072,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
     function addPlayer( name, _, score ){
         const found = firstPlayerByName( name )
         if ( found !== undefined ){
-            console.log('ALREADYU EXISTS')
+            console.log('ALREADY EXISTS',name)
             return ADD_PLAYER_RETURNS.ALREADY_JOINED
         } else {
             createAndPlacePlayer( name, score )
