@@ -139,6 +139,22 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             }
         }
     }
+    function mkRemoveAnim( id, playlist, frameDuration, extraDelay = 0 ){
+        // play anim and remove
+        const animationLength = playlist.length * frameDuration
+        const animationTo = Items.create( {
+            removeWith : { ids : [ id ] },
+            timeout : { start : World.getVersion(),
+                        delay : frameDuration ,
+                        repeatCount : playlist.length - 1 }
+        } )
+        Items.change( id, {
+            animation : { timeoutId : animationTo, playlist }
+        })
+        Events.wait( animationLength + extraDelay, () => {
+            Items.remove( id )
+        })
+    }
     
     function dbgItems( printUndefined = false){
         return
@@ -295,10 +311,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             }
             //        const island = Island( islandData )        
             const island1 = Items.create({
-                heightmap : {
-                    type : HEIGHTMAP_TYPE.island,
-                    ...islandData
-                },
+                heightmap : { type : HEIGHTMAP_TYPE.island, ...islandData },
                 position : { x : 500, y : 0 },
                 //speed : { pps : 1, min : 1, max : 5 },
                 direction : { a16 : 3 },
@@ -308,10 +321,6 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                                                                 | COLLISION_CATEGORY.water ) },
                 attack : { collision : 1000 }
             })
-            Events.onCollide( island1, (W,_, collideWithId ) => {
-                // console.log('ISLAND COLLIDED')
-            })
-
         }
         {
             const islandData = {
@@ -321,14 +330,9 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 hmax:200,
                 period:50
             }
-            //        const island = Island( islandData )
             Items.create({
-                //speed : { pps : 1, min : 1, max : 5 },
                 direction : { a16 : 4 },
-                heightmap : {
-                    type : HEIGHTMAP_TYPE.island,
-                    ...islandData
-                },
+                heightmap : { type : HEIGHTMAP_TYPE.island, ...islandData },
                 position : { x : 1500, y : 0 },
                 bb : {  },
                 collision : {
@@ -340,25 +344,6 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             })
         }
     }
-    /*
-      function createLandedBasket( { Items, Components, getVersion }, modelId ){
-      const basket = Items.create( {
-      sprite : Components.sprite.get( modelId ),
-      position : Components.position.get( modelId ),
-      color : Components.color.get( modelId ),
-      })
-      return basket
-      }
-      function createFallingBasket( { Items, Components }, modelId ){
-      const basket = Items.create( {
-      sprite : Components.sprite.get( modelId ),
-      position : Components.position.get( modelId ),
-      color : Components.color.get( modelId ),
-      direction : { a16 : 12 },
-      speed : { pps : 3, min : 0, max : 10 }
-      })
-      return basket
-      }*/
     function attachRadar( id1, options ){
         // radar
         const radarId = Items.create( Object.assign( {
@@ -376,6 +361,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
     }
 
     function createFlyingBalloon( { Items, Components, getVersion } )  {
+
         const timeoutAnim = Items.create( {
             timeout : { start : 0,  delay : 1, /* repeatCount : 8, */  loop : true }
         })
@@ -394,6 +380,8 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             speed : { pps : 1, min : 0, max : 3 },
             color : { cs : 2 },
             health : { life : 5, maxLife : 10 },
+            attack : { collision : 2 },
+
         })
         const balloon = Items.create( {
             sprite : { type : SpriteTypeNum['balloon'] },
@@ -401,77 +389,60 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             attachement : { attachedToId : basket,
                             location : RELATIVE_ATTACHEMENT_POSITION['above'],
                             radius : 16 },
-            //animation : { timeoutId : timeoutAnim,
-            //playlist : [0,1,2,3,4,5,6,7] },
             collision : { pixel : true,
                           category : COLLISION_CATEGORY.balloon,
                           mask : COLLISION_CATEGORY_ALL^(COLLISION_CATEGORY.balloon|COLLISION_CATEGORY.basket) },
             color : { cs : 2 },
             bb : {},
             health : { life : 5, maxLife : 10 },
+            attack : { collision : 1 },
         })
 
-        Events.onCollide( basket, (W, id, withId ) => {
-            // console.log('basket',id,'collides with',withId)
-            // console.log('basket health :',Components.health.get( id ) )
-            if ( Components.heightmap.has (withId) ){
-                const speed = Components.speed.get( id )
-                if ( speed ) {
-                    //if ( speed.pps < 2 ){
-                    //console.log('basket set unmovable')
-                    Items.change( basket, { speed : false, bb : false, mass : false } )
-                    //} 
-                }
+        function groundBasket( ){
+            const speed = Components.speed.get( basket )
+            if ( speed ) {
+                Items.change( basket, { speed : false, bb : false, mass : false } )
             }
-            //     if ( Components.heightmap.has (withId) ){
-            //         Components.health.get( id ).life--
-            //     }
-        })
-        Events.onCollide( balloon, (W, id, withId ) => {
-            //console.log('balloon',id,'collides with',withId)
-        })
-
-        function killBalloon( id ){
-            const animTo = Items.create( { timeout : { start : World.getVersion(),  delay : 2,  repeatCount : 7 } } )
-            Items.change( balloon, {
-                attachement : false,
-                fly : { freefall : true },
-                mass : { mass: 10 },
-                direction : { a16 : 12 },
-                animation : { timeoutId : animTo,
-                              playlist : [0,1,2,3,4,5,6,7] },
-            } )
-            const removeTo = Items.create( { timeout : { start : World.getVersion(),  delay : 16 } } )
-            Events.wait( 16, () => Items.remove( balloon  ) )
+       }
+        function killBalloon(  ){
+            mkRemoveAnim( balloon, [0,1,2,3,4,5,6,7], 1, 0 )
         }
-        Events.onDeath( basket, ( W, id ) => {
-            //console.log('basket dies')
-            const speed = Components.speed.get( id ) 
-            if ( speed ){
-                //console.log('set to free fall')
-                Items.change( id, {
-                    fly : { freefall : true },
-                } )
-                const direction = Components.direction.get( id )
-                if ( direction ){
-                    direction.a16 = 12
-                }
+        function killBasketAndRespawn(){
+            killBalloon( balloon )
+            Events.wait( 10 * 10, () => Items.remove( basket ) )
+            Events.wait( 15 * 10, () => createFlyingBalloon( World ) )
+        }
+        function freeFlyBasket(  ){
+            Items.change( basket, { fly : { freefall : true } } )
+            const direction = Components.direction.get( basket )
+            if ( direction ){
+                // head to ground
+                direction.a16 = 12
             }
-            killBalloon( id )
-            Events.wait( 45, () => Items.remove( basket ) )
-            Events.wait( 50, () => createFlyingBalloon( World ) )
+        }
+        Events.onCollide( basket, (_, __, withId ) => {
+            if ( Components.heightmap.has( withId ) ){
+                console.log('* basket collides with ground')
+                // collide with ground
+                groundBasket()
+            }
         })
-        
+        Events.onDeath( basket, ( W, id ) => {
+            const speed = Components.speed.get( id )
+            console.log('* basket is dead')
+            if ( speed ){
+                // is not crashed
+                freeFlyBasket()
+            }
+            killBasketAndRespawn()
+        })
         Events.onDeath( balloon, ( W, id ) => {
+            console.log('* balloon is dead')
             killBalloon( id )
-            //console.log('ballon  dies')
-            //Items.change( basket, { speed : false, bb : false, mass : false } )
             const speed = Components.speed.get( basket ) 
             if ( speed ){
-                //console.log('set to free fall2')
-                Items.change( basket, {
-                    fly : { freefall : true },
-                } )
+                // in in air
+                Items.change( basket, { fly : { freefall : true } } )
             }
         })
         
@@ -500,12 +471,12 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                     category : COLLISION_CATEGORY.missile,
                     mask : 0xffff
                 },
-                health : { life : 1, maxlife : 1 },
                 attack : { collision : 5 },
                 direction : {}, // copy
                 position : {}, // copy
                 speed : {}, // copy  pps : pps, max : 10, min : 0 },
                 worldbounds : { die : true },
+                health : { life  : 1, maxlife : 1 }
             } }
         } )
 
@@ -532,26 +503,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             },
             intervalle
         )
-        /*
-          const timeoutId = Events.pulse( 1, watchAvailable )
-          function watchAvailable(){
-
-          const isAvailable = Systems.placer.isAvailable( radarId )
-          if ( isAvailable === false ) return
-          
-          const position = Components.position.get( radarId )
-          if ( position === undefined ) return
-
-          Items.remove( radarId )
-          
-          const timeout =  Components.timeout.get( timeoutId )
-          if ( timeout === undefined ) return
-          Items.remove( timeoutId )
-
-          // call f
-          f( position )
-          }        
-        */
+      
     }
     function createAndPlacePlayer( name, score, colorScheme ) {
 
@@ -564,10 +516,8 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             const id = createPlayer( name, score, colorScheme )
             const position = Components.position.get( id )
             if ( position ){
-                //console.log('set position',position)
                 position.x = freePosition.x
                 position.y = freePosition.y
-                //console.log('->set position',position)
             }
         }, {
             bb : { w : 128, h : 128 },
@@ -643,9 +593,6 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                              commands : ['firemissile'] }
             })
         }
-        /*const radarId = attachRadar( id1, {
-        //bb : { w : 64, h : 128 }
-        })*/
         function dieAndRespawn( id ){
             const toId = Items.create(
                 { timeout : { start : World.getVersion(), delay  : 60  }}
@@ -792,14 +739,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         if ( took_ms > 20 ){
             console.log('version',version + 1,'took', took_ms,'ms', 'max steps per seconds:', 1000 /  took_ms )
         }
-        //
-        // function handleCollision12( id1, id2 ){
-        //     //console.log('bon...',id1,id2)
-        //     //console.log( Components.health.get(id1),Components.health.get(id2))
-        //     if ( Components.player.has( id1 ) ){
-        //         //console.log('bon...',id1,id2)
-        //     }
-        // }
+
         function handleDeath( id ){
             const Components = World.Components
             if (  Components.heightmap.has( id ) ){
@@ -814,26 +754,11 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             }
         }
         //
-        World.Systems.collision.getCollidingPairs().forEach( ({ id1, id2 }) => {
-            //console.log('record collision', id1, id2 )
-            //handleCollision12( id1, id2 )
-            //handleCollision12( id1, id2 )
+        World.Systems.collision.getCollidingPairs().forEach( ({ id1, id2 }) => {        
         })        
         World.Systems.health.getDeathList().forEach( id => {
-            //console.log('!!dead',id,Components.sprite.get(id).type,Components.player.get(id))
-            handleDeath( id )
         })
-        
-        //Events.step()
-        
-        /*
-          if ( ( version % 5 ) === 0 ){
-          Systems.commands.handleInput( 'hie', [ 'noseup' ] ) 
-          }
-          if ( ( version % 6 ) === 0 ){
-          Systems.commands.handleInput( 'bob', [ 'nosedown' ] ) 
-          }
-        */
+
         //dbgItems()
         
         sendUpdate()
