@@ -375,34 +375,37 @@ export function mkSystems( W ){
                     }
                 }
 
-                if ( ( actuatorHasCommand('firemissile') && input['firemissile'] )
-                     || ( actuatorHasCommand('firebomb')  && input['firebomb'] )){
-                    const launcher = Components.launcher.get( targetId )
-                    const position = Components.position.get( targetId )
-                    const direction = Components.direction.get( targetId )
-                    if ( ( launcher !== undefined ) && ( position !== undefined ) ){
-                        const launches = input['firemissile']||input['firebomb']
-                        if ( launches ){
-                            const model = Components.model.get( launcher.modelId )
-                            const speed = Components.speed.get( targetId )
-                            if ( model ){
-                                const inheritFromLauncher =  {
-                                    direction : direction,
-                                    position : { x : position.x, y : position.y },
-                                }
-                                const dropped = W.Items.create(
-                                    Object.assign( {}, model.model, inheritFromLauncher )
-                                )
-                                const droppedSpeed = W.Components.speed.get( dropped )
-                                if ( speed && droppedSpeed ){
-                                    if ( droppedSpeed.pps === undefined ){
-                                        droppedSpeed.pps = clamp( speed.pps + 1,
-                                                                  droppedSpeed.min,
-                                                                  droppedSpeed.max)
-                                    }
-                                }
-                                didSomething = 4
+                const launcher = Components.launcher.get( targetId )
+                const position = Components.position.get( targetId )
+                
+                if ( ( launcher !== undefined )
+                     && ( position !== undefined )
+                     && ( ( actuatorHasCommand('firemissile') && input['firemissile'] )
+                          || ( actuatorHasCommand('firebomb') && input['firebomb'] ) ) ){
+                    
+                    const direction = Components.direction.get( targetId )                  
+                    
+                    const launches = input['firemissile'] || input['firebomb']
+                    if ( launches ){
+                        const model = Components.model.get( launcher.modelId )
+                        const speed = Components.speed.get( targetId )
+                        if ( model ){
+                            const inheritFromLauncher =  {
+                                direction : direction,
+                                position : { x : position.x, y : position.y },
                             }
+                            const dropped = W.Items.create(
+                                Object.assign( {}, model.model, inheritFromLauncher )
+                            )
+                            const droppedSpeed = W.Components.speed.get( dropped )
+                            if ( speed && droppedSpeed ){
+                                if ( droppedSpeed.pps === undefined ){
+                                    droppedSpeed.pps = clamp( speed.pps + 1,
+                                                              droppedSpeed.min,
+                                                              droppedSpeed.max)
+                                }
+                            }
+                            didSomething = 4
                         }
                     }
                 }
