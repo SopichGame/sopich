@@ -222,7 +222,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 attack : { collision : 5 },
                 direction : {}, // copy
                 position : {}, // copy
-                speed : { pps : 12, min : 5, max : 12 }, // copy  pps : pps, max : 10, min : 0 },
+                speed : { pps : undefined, min : 11, max : 12 }, // copy  pps : pps, max : 10, min : 0 },
                 worldbounds : { die : true },
                 health : { life  : 1, maxLife : 1 }
             } }
@@ -240,7 +240,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 attack : { collision : 10 },
                 direction : {}, // copy
                 position : {}, // copy
-                speed : { pps : 2, min : 2, max : 12 }, // copy  pps : pps, max : 10, min : 0 },
+                speed : { pps : undefined, min : 1, max : 4 }, // copy  pps : pps, max : 10, min : 0 },
                 worldbounds : { die : true },
                 health : { life  : 1, maxLife : 1 }
             } }
@@ -603,11 +603,13 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                                 radius : 18 * ( 1 + i ) },
                 position : {}, 
                 direction : {},
+                speed : {}
             })
             const fireMissileTimedActuator = createDesignatedTimedActuator(
                 launcherId, 10, name, ['firemissile']
             )
         }
+        
         // bomb launcher
         {
             const launchDelay = 5
@@ -619,6 +621,11 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                                 radius : 18 * ( 1 ) },
                 position : {}, 
                 direction : {},
+                speed : {}
+            })
+            Events.pulse( 1, () => {
+                const speed = World.Components.speed.get( launcherId )
+                //console.log('speeeeeeed',speed)
             })
             const fireBombTimedActuator = createDesignatedTimedActuator(
                 launcherId, launchDelay, name, ['firebomb']
