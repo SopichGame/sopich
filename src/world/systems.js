@@ -24,6 +24,42 @@ import { Water } from '../object/water.js'
 function normalDirection16(r,a){
     return ( a + (r?4:12) ) % directions16.length
 }
+export function itemToSpriteData( { Components }, id ){
+    const bb = Components.bb.get( id )
+    const sprite = Components.sprite.get(id)
+    if ( sprite === undefined )
+        return
+    
+    const animation = Components.animation.get(id)
+    // cs r a as dtype
+    const direction = Components.direction.get(id)
+    const r = Components.r.get(id)
+    // as
+    // dtype
+    const sprType = sprite.type
+    //const { w, h } = SpriteInfosByTypeNum[ sprType ]
+    const subtypes = sprite.subtypes
+    let a16 = 0
+    if ( direction ){
+        if ( direction.a16 !== undefined ) {
+            a16 = direction.a16
+        } else if ( direction.a8 !== undefined ) {
+            a16 = direction.a8 * 2
+        }
+    }                        
+    const sprData = {
+        r : r?r.r:0,
+        a16 : a16, 
+        a8 : Math.floor( a16 / 2 ),
+        as : (animation?(animation.step):0),
+        tt : ((subtypes)?(subtypes.tt):0),
+        bt : ((subtypes)?(subtypes.bt):0),
+        dt : ((subtypes)?(subtypes.dt):0),
+    }
+  
+    return sprData
+}
+
 import { prepareBottomHitmask, symbGetInArray, prepareHitmask, prepareDimensions }  from '../symbols.js'
 import { SpriteInfosByTypeNum, ColorSchemes, SpriteTypeNum } from '../symbols.js'
 
@@ -37,7 +73,8 @@ const getSpriteDimensions =symbGetInArray( SpriteDimensions, 'dimparams' )
 const HitMasks = prepareHitmask()
 const getHitMask = symbGetInArray( HitMasks, 'mparams' )
 
-export function getRelativeAttachementPosition( { a8 = 0, a16 = a8 * 2 } = {}, { r = 0 } = {}, radius  = 0, location = 0){
+export function getRelativeAttachementPosition( { a8 = 0, a16 = a8 * 2 } = {},
+                                                { r = 0 } = {}, radius  = 0, location = 0){
     
     if ( location === RELATIVE_ATTACHEMENT_POSITION['below'] ){
     } else if ( location === RELATIVE_ATTACHEMENT_POSITION['above'] ){
@@ -47,7 +84,7 @@ export function getRelativeAttachementPosition( { a8 = 0, a16 = a8 * 2 } = {}, {
     } else if ( location === RELATIVE_ATTACHEMENT_POSITION['ahead'] ){
         a16 = ( a16 + 4 ) % 16
     }
-
+    
     let normal = normalDirection16(r, a16 || 0 )
     let dir = directions16[ normal % 16 ]
     return {
@@ -343,19 +380,11 @@ export function mkSystems( W ){
                     if ( ( launcher !== undefined ) && ( position !== undefined ) ){
                         const launches = input['firemissile']
                         if ( launches ){
-                            const speed = Components.speed.get( targetId )
-                            let pps = 7
-                            if ( speed ){
-                                pps = 1 + speed.pps * 2
-                                //console.log('->',pps,speed)
-                            }
-                            pps = 10
                             const model = Components.model.get( launcher.modelId )
-
                             if ( model ){
                                 const inheritFromLauncher =  {
                                     direction : direction,
-                                    speed : { pps : pps, max : 10, min : 0 },
+                                    //speed : { pps : pps, max : 10, min : 0 },
                                     position : { x : position.x, y : position.y },
                                 }
                                 W.Items.create(
@@ -366,6 +395,31 @@ export function mkSystems( W ){
                         }
                     }
                 }
+                if ( ( actuatorHasCommand('firebomb') ) ){
+                    const launcher = Components.launcher.get( targetId )
+                    const position = Components.position.get( targetId )
+                    const direction = Components.direction.get( targetId )
+                    if ( ( launcher !== undefined ) && ( position !== undefined ) ){
+                        const launches = input['firebomb']
+                        if ( launches ){
+                            console.log('firebomb')
+                            const model = Components.model.get( launcher.modelId )
+                            if ( model ){
+                                const inheritFromLauncher =  {
+                                    direction : direction,
+                                    //speed : { pps : pps, max : 10, min : 0 },
+                                    position : { x : position.x, y : position.y },
+                                }
+                                W.Items.create(
+                                    Object.assign( {}, model.model, inheritFromLauncher )
+                                )
+                                didSomething = 4
+                            }
+                        }
+                    }
+                }
+
+                
                 if ( didSomething ){
                     if ( timeoutId !== undefined ){
                         W.Systems.timeout.reset( timeoutId )
@@ -591,33 +645,12 @@ export function mkSystems( W ){
                     const bb = Components.bb.get( id )
                     const sprite = Components.sprite.get(id)
                     if ( sprite ){
-                        const animation = Components.animation.get(id)
-                        // cs r a as dtype
-                        const direction = Components.direction.get(id)
-                        const r = Components.r.get(id)
-                        // as
-                        // dtype
-                        const sprType = sprite.type
-                        //const { w, h } = SpriteInfosByTypeNum[ sprType ]
-                        const subtypes = sprite.subtypes
-                        const sprData = {
-                            r : r?r.r:0,
-                            a16 : (direction?(direction.a16):0),
-                            a8 : (direction?(direction.a8):0),
-                            as : (animation?(animation.step):0),
-                            tt : ((subtypes)?(subtypes.tt):0),
-                            bt : ((subtypes)?(subtypes.bt):0),
-                            dt : ((subtypes)?(subtypes.dt):0),
-                        }
-                        if ( sprType === 14 ){
-                           // console.log( sprData )
-                        }
-                        const { w, h } = getSpriteDimensions( sprType, sprData )
+                        const sprData = itemToSpriteData( W, id )
+                        const { w, h } = getSpriteDimensions( sprite.type, sprData )
                         bb.w = w
                         bb.h = h
-
                         return
-                    } 
+                    }
                     const heightmap = Components.heightmap.get( id ) 
                     if ( heightmap ){
                         const { w, h } = W.Systems.heightmap.getDimensions( id )
@@ -771,18 +804,10 @@ export function mkSystems( W ){
                     const spriteR  = Components.r.get( id1 )
                     const spriteSprite  = Components.sprite.get( id1 )
                     const heigthmapPosition = Components.position.get( id2 )
-                    
-                    const spritedef = {
-                        a16 : spriteDirection?spriteDirection.a16:undefined,
-                        a8 : spriteDirection?spriteDirection.a16:undefined,
-                        r : spriteR?spriteR.r:undefined,
-                        dt: 0, //TODO,
-                        tt : 0, //TODO
-                        as : 0, // TODO
-                        bt : (spriteSprite.subtypes)?(spriteSprite.subtypes.bt):0
-                    }
+
+                    const spriteData = itemToSpriteData( W, id1 )
                     const bhm = getBottomHitMask(
-                        spriteSprite.type, spritedef
+                        spriteSprite.type, spriteData
                     )
                     if ( bhm === undefined ){
                         console.log('no hitbox!',{sprite,spritedef,heightmap})

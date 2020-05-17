@@ -337,7 +337,7 @@ function CanvasPositionTracker( abuptThresholdSq = Math.pow( 10, 2 ) ){
                     lastAbruptChange = Date.now()
                 }
             } else {
-                //  lastAbruptChange = Date.now()
+                lastAbruptChange = Date.now()
             }
             position = { x, y }
         }

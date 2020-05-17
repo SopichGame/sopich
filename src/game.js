@@ -474,9 +474,27 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 attack : { collision : 5 },
                 direction : {}, // copy
                 position : {}, // copy
-                speed : {}, // copy  pps : pps, max : 10, min : 0 },
+                speed : { pps : 12, min : 5, max : 12 }, // copy  pps : pps, max : 10, min : 0 },
                 worldbounds : { die : true },
-                health : { life  : 1, maxlife : 1 }
+                health : { life  : 1, maxLife : 1 }
+            } }
+        } ),
+        bomb : Items.create( {
+            model : {  model  : {
+                fly : { freefall : true },
+                sprite : { type :  SpriteTypeNum['bomb'] },
+                bb : {  },
+                mass : { mass : 5 },
+                collision : {
+                    category : COLLISION_CATEGORY.bomb,
+                    mask : 0xffff
+                },
+                attack : { collision : 10 },
+                direction : {}, // copy
+                position : {}, // copy
+                speed : { pps : 3, min : 5, max : 12 }, // copy  pps : pps, max : 10, min : 0 },
+                worldbounds : { die : true },
+                health : { life  : 1, maxLife : 1 }
             } }
         } )
 
@@ -538,8 +556,8 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             player : { name, score : 2 },
             position : { x : 200 + Math.random() * 800, y : 200 },
             direction : { a16 : 0 },
-            propulsor : { power : 7, min : 0, max : 8 },
-            speed : { pps : 0, max : 8, min : 0 },
+            propulsor : { power : 8, min : 0, max : 10 },
+            speed : { pps : 0, max : 10, min : 0 },
             sprite : { type : SpriteTypeNum['plane'] },
             r : { r : 0 },
             bb : {  },
@@ -592,6 +610,30 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                              timeoutId : timeoutId3 ,
                              commands : ['firemissile'] }
             })
+        }
+        // bomb launcher
+        {
+            const launcherId1 = Items.create( {
+                launcher : { modelId : Models.bomb },
+                removeWith : { ids:[id1] },
+                attachement : { attachedToId : id1,
+                                location : RELATIVE_ATTACHEMENT_POSITION['below'],
+                                radius : 18 * ( 1 + 4 ) },
+                position : {}, 
+                direction : {},
+            })
+            const timeoutId3 = Items.create( {
+                removeWith : { ids:[id1] },
+                timeout : { start : version,  delay : 10,  resetable : true }
+            })
+            const actLauncherId1  = Items.create(  {
+                removeWith : { ids:[id1] },
+                actuator : { playerName : name,
+                             targetId : launcherId1,
+                             timeoutId : timeoutId3 ,
+                             commands : ['firebomb'] }
+            })
+            
         }
         function dieAndRespawn( id ){
             const toId = Items.create(
@@ -746,17 +788,19 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             } else {
                 const sprite = Components.sprite.get( id )
                 if ( sprite ) {
-                    if ( sprite.type === SpriteTypeNum['missile'] ){
+                    if ( ( sprite.type === SpriteTypeNum['missile'] )
+                         || ( sprite.type === SpriteTypeNum['bomb'] ) ){
                         Items.remove( id )
-                    }
+                    } 
                 }
-                
             }
         }
         //
-        World.Systems.collision.getCollidingPairs().forEach( ({ id1, id2 }) => {        
+        World.Systems.collision.getCollidingPairs().forEach( ({ id1, id2 }) => {
+            
         })        
         World.Systems.health.getDeathList().forEach( id => {
+            handleDeath( id )
         })
 
         //dbgItems()
@@ -904,6 +948,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                     })
                     __idx++
                 } else  if ( ( sprite.type === SpriteTypeNum['plane'] ) && direction && player ) {
+                    
                     categ.planes.push({
                         id,
                         name : player.name,
@@ -954,10 +999,17 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                         cs : (color)?(color.cs):0,
                     })
                 } else  if ( ( sprite.type === SpriteTypeNum['bomb'] ) && direction  ) {
+                    
+                    let a16 = 0
+                    if ( a16 !== undefined ){
+                        a16 = direction.a16
+                    } else if ( a8 !== undefined ){
+                        a16 = a8 * 2 
+                    }
                     categ.bombs.push({
                         id : id,
-                        a : direction.a8,
-                        a8 : direction.a8,
+                        //a16 : direction.a8 * 2,
+                        a8 : Math.floor(a16/2),
                         x : position.x,
                         y : position.y,
                         sprt : sprite.type,

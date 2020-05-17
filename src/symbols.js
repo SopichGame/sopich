@@ -305,7 +305,7 @@ export const SpriteInfosByTypeNum = [
     { type : 'debris',  dimparams:['dt'],/* w : 8, h : 8 , */ iparams : ['cs','dt'], bmparams : ['dt'], dparams : [  'sprt','cs','dt' ] },
     { type : 'flock',  dimparams:['as'],/* w : 16, h : 16 , */ iparams : ['as'], bmparams : ['as'], dparams : [  'sprt','as' ] },
     { type : 'bird',  dimparams:['as'],/* w : 4, h : 2 , */ iparams : ['as'], dparams : [  'sprt','as' ] }, //
-    { type : 'bomb',  dimparams:['a8'],/* w : 8, h : 8 , */ iparams : ['cs','a8'], dparams : [  'sprt','cs','a8' ] },
+    { type : 'bomb',  dimparams:['a8'],/* w : 8, h : 8 , */ iparams : ['cs','a8'], bmparams : ['a8'], dparams : [  'sprt','cs','a8' ] },
     { type : 'missile',  dimparams:['a16'],/* w : 8, h : 8 , */ iparams : ['cs','a16'], bmparams : ['a16'], dparams : [  'sprt','cs','a16' ] },
     { type : 'guidedmissile',  dimparams:['a16'],/* w : 8, h : 8 , */ iparams : ['cs','a16'], dparams : [  'sprt','cs','a16' ] },
     //{ type : 'burst',  dimparams:[],/* w :8, h : 8 , */ iparams : ['a'] },, dparams : [ 'sprt','cs','r','a16' ] },
@@ -338,7 +338,7 @@ export function symbGetInArray( array, prop = 'iparams' ){
         return sprInfos[ prop ].reduce( (r, p) => {
             const v = params[ p ]
             if ( !r ){
-                console.log('symbGetInArray2',{array,prop,spriteTypeNum,params})
+                console.log('ERROR ! SPRITE PROP !',{array,prop,spriteTypeNum,params})
             }
             const l = (r.length)?(r.length):1
             return r[v%l]
