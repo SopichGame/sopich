@@ -492,7 +492,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 attack : { collision : 10 },
                 direction : {}, // copy
                 position : {}, // copy
-                speed : { pps : 3, min : 5, max : 12 }, // copy  pps : pps, max : 10, min : 0 },
+                speed : { pps : 2, min : 2, max : 12 }, // copy  pps : pps, max : 10, min : 0 },
                 worldbounds : { die : true },
                 health : { life  : 1, maxLife : 1 }
             } }
@@ -613,24 +613,25 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         }
         // bomb launcher
         {
-            const launcherId1 = Items.create( {
+            const launchDelay = 5
+            const launcherId = Items.create( {
                 launcher : { modelId : Models.bomb },
                 removeWith : { ids:[id1] },
                 attachement : { attachedToId : id1,
                                 location : RELATIVE_ATTACHEMENT_POSITION['below'],
-                                radius : 18 * ( 1 + 4 ) },
+                                radius : 18 * ( 1 ) },
                 position : {}, 
                 direction : {},
             })
-            const timeoutId3 = Items.create( {
+            const timeoutId = Items.create( {
                 removeWith : { ids:[id1] },
-                timeout : { start : version,  delay : 10,  resetable : true }
+                timeout : { start : version,  delay : launchDelay,  resetable : true }
             })
-            const actLauncherId1  = Items.create(  {
+            const actLauncherId  = Items.create(  {
                 removeWith : { ids:[id1] },
                 actuator : { playerName : name,
-                             targetId : launcherId1,
-                             timeoutId : timeoutId3 ,
+                             targetId : launcherId,
+                             timeoutId : timeoutId ,
                              commands : ['firebomb'] }
             })
             

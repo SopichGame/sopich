@@ -517,7 +517,7 @@ export function Display() {
                     const { hmin, hmax } = heightmap
                     for ( let i = 0 ; i <= $canvas.width ; i++ ){
                         const wx = worldWindow.left + i
-                        let wy = hmax
+                        let wy = 10 + hmax
                             + Math.sin( wx / 16 + Math.sin( Date.now() / 1000 ) )
                             * Math.sin( Date.now() / 400 )
                             * 2

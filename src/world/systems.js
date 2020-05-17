@@ -512,20 +512,23 @@ export function mkSystems( W ){
                     const fly = Components.fly.get( id )
                     if ( fly && fly.freefall ){
                         const direction = Components.direction.get( id )
-                        if ( ( version % 10*10 ) === 0 ){
-                            if ( direction !== undefined ){
-                                if ( direction.a8 !== undefined ){
-                                    direction.a8 = toFall8[ direction.a8 ]
-                                } else if ( direction.a16 !== undefined ){
-                                    const a = toFall16[ direction.a16 ]
-                                    direction.a16 = a
+                        if ( direction ){
+                            if ( ( version % 10*10 ) === 0 ){
+                                if ( direction !== undefined ){
+                                    if ( direction.a8 !== undefined ){
+                                        direction.a8 = toFall8[ direction.a8 ]
+                                    } else if ( direction.a16 !== undefined ){
+                                        const a = toFall16[ direction.a16 ]
+                                        direction.a16 = a
+                                    }
                                 }
                             }
                         }
                         const speed = Components.speed.get( id )
-                        if ( speed ){
-                            if ( ( version % 10 ) === 0 ){
-                                speed.pps = clamp( ( speed.pps || 0 ) + 1, speed.min, speed.max )
+                        if ( speed && direction ){
+                            if (( direction.a8 === 6 )||(direction.a16 === 12)){
+                                speed.pps = clamp( ( speed.pps || 0 ) + 1,
+                                                   speed.min, speed.max )
                             }
                         }
                     }
