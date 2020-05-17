@@ -149,6 +149,7 @@ function Stars(){
             const bcolors = [ 'red','violet','white' ]
             stars.forEach( ({x,y,brightness}) => {
                 let cxy = world_to_context( x, y )
+                $context.beginPath()
                 $context.fillStyle = bcolors[ brightness ]
                 $context.fillRect( cxy.x, cxy.y, 1,1)                
             })
@@ -180,12 +181,9 @@ function TrailPoints(){
             const {ox, oy, x,y,color,spread,size,date, expl} = pt
             const age = now - date
             if ( ( age > minAge) && ( age < maxAge ) ){
-
-                
-                
-                
                 const prog =  1 - ( (age - minAge) / (maxAge-minAge) )
                 let cxy = world_to_context( x, y )
+                $context.beginPath()
                 $context.fillStyle = color
                 const r1 = ( Math.random() - 0.5 ) * 2 * spread
                 const r2 = ( Math.random() - 0.5 ) * 2 * spread
@@ -446,6 +444,7 @@ export function Display() {
         function drawWorldRectangle( x, y, w, h, style ){
             let wxy = world_to_context( x, y )
             {
+                $context.beginPath()
                 $context.strokeStyle = style
                 const x = wxy.x - w / 2,
                       y = wxy.y - h / 2
@@ -458,6 +457,7 @@ export function Display() {
         {
         }
         {
+            $context.beginPath()
             $context.fillStyle = 'black'            
             $context.fillRect( 0, 0, $canvas.width, $canvas.height )
             if (false){
@@ -480,22 +480,21 @@ export function Display() {
             
             
         }
+
         // stars
         stars.display( $context, world_to_context )
+
+        // trail points
         trailPoints.display( world_to_context,  $context )
 
-        // sea
-      
-       
-        
-        // island
         const heightmaps = State.heightmaps
         if ( heightmaps ){
-
             heightmaps.forEach( heightmap => {
                 if ( heightmap.type === HEIGHTMAP_TYPE.island ){
+                    // island
                     // TODO : cache
-                    const island =  Island( heightmap )
+                    const island =  Island( heightmap )                                
+                    $context.beginPath()
                     $context.fillStyle = 'green'
                     for ( let i = 0 ; i <= $canvas.width ; i++ ){
                         const wx = worldWindow.left + i
@@ -512,22 +511,22 @@ export function Display() {
                         }
                     }
                 } else if (  heightmap.type === HEIGHTMAP_TYPE.water ){
-                     {
-                         $context.fillStyle = 'blue'
-                         const { hmin, hmax } = heightmap
-                         for ( let i = 0 ; i <= $canvas.width ; i++ ){
-                             const wx = worldWindow.left + i
-                             let wy = hmax
-                                 + Math.sin( wx / 16 + Math.sin( Date.now() / 1000 ) )
-                                 * Math.sin( Date.now() / 400 )
-                                 * 2
-                             let cxy = world_to_context( wx, wy )                
-                             $context.fillRect(Math.floor(i),
-                                               Math.floor(cxy.y),
-                                               Math.floor(1),
-                                               Math.ceil($canvas.height - cxy.y))
-                         }
-                     }
+                    // water                                        
+                    $context.beginPath()
+                    $context.fillStyle = 'blue'
+                    const { hmin, hmax } = heightmap
+                    for ( let i = 0 ; i <= $canvas.width ; i++ ){
+                        const wx = worldWindow.left + i
+                        let wy = hmax
+                            + Math.sin( wx / 16 + Math.sin( Date.now() / 1000 ) )
+                            * Math.sin( Date.now() / 400 )
+                            * 2
+                        let cxy = world_to_context( wx, wy )                
+                        $context.fillRect(Math.floor(i),
+                                          Math.floor(cxy.y),
+                                          Math.floor(1),
+                                          Math.ceil($canvas.height - cxy.y))
+                    }
                 }
             })
         }
@@ -536,6 +535,7 @@ export function Display() {
         // ground
         const ground = State.ground
         if ( ground ){
+            $context.beginPath()
             $context.fillStyle = 'green'
             let lastwy = 0
             let asLine = false
@@ -563,6 +563,7 @@ export function Display() {
                 const { x, y, as, broken } = target
                 let wxy = world_to_context( x, y )
                 putSprite( getImage( target.sprt, target ), wxy.x , wxy.y )
+                
                 /*
                 //if ( ttl > 0 ){
                 if ( broken ){
@@ -601,6 +602,7 @@ export function Display() {
                 if ( ttl < 0 ){
                     return
                 }
+                $context.beginPath()
                 $context.fillStyle = 'black'
 
                 let va = a
@@ -620,6 +622,7 @@ export function Display() {
                 
                 let col = ColorSchemes[cs][0]
                 let rgb = ( human === true )?`rgb(${col[0]},${col[1]},${col[2]})`:'gray'
+                $context.beginPath()
                 $context.fillStyle = rgb
                 
                 // const is_target_plane = (  me.id === plane.id )
