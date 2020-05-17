@@ -169,6 +169,84 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         })
         console.log('=--->')
     }
+    function createDesignatedTimedActuator( targetId, delay, playerName, commands ){
+        const timeoutId = Items.create( {
+            removeWith : { ids:[ targetId ] },
+            timeout : { start : World.getVersion(),  delay, resetable : true }
+        })
+        const actuatorId = Items.create( {
+            removeWith : { ids:[ targetId ] },
+            actuator : { playerName,
+                         targetId,
+                         timeoutId : timeoutId ,
+                         commands }
+        })
+        return { timeoutId, actuatorId }
+    }
+
+    function createPlacer( { x1, y1, x2, y2 }, intervalle, onFreePosition, props ){        
+        
+        const radarId = Items.create( Object.assign({
+            placement : { x1, y1, x2, y2 },
+            collision : {
+                category : COLLISION_CATEGORY.radar,
+                mask : COLLISION_CATEGORY_ALL ^ ( COLLISION_CATEGORY.radar )
+            },
+            position : { },
+        }, props ))
+
+        
+        EventsWatchUntil(
+            () => Systems.placer.isAvailable( radarId ),
+            () => {
+                const position = Components.position.get( radarId )
+                if ( position === undefined ) return
+                Items.remove( radarId )
+                onFreePosition( position )
+            },
+            intervalle
+        )
+        
+    }
+    const Models = {
+        test : Items.create( {} ),
+        missile : Items.create( {
+            model : {  model  : {
+                sprite : { type :  SpriteTypeNum['missile'] },
+                bb : {  },
+                mass : { mass : 5 },
+                collision : {
+                    category : COLLISION_CATEGORY.missile,
+                    mask : 0xffff
+                },
+                attack : { collision : 5 },
+                direction : {}, // copy
+                position : {}, // copy
+                speed : { pps : 12, min : 5, max : 12 }, // copy  pps : pps, max : 10, min : 0 },
+                worldbounds : { die : true },
+                health : { life  : 1, maxLife : 1 }
+            } }
+        } ),
+        bomb : Items.create( {
+            model : {  model  : {
+                fly : { freefall : true },
+                sprite : { type :  SpriteTypeNum['bomb'] },
+                bb : {  },
+                mass : { mass : 5 },
+                collision : {
+                    category : COLLISION_CATEGORY.bomb,
+                    mask : 0xffff
+                },
+                attack : { collision : 10 },
+                direction : {}, // copy
+                position : {}, // copy
+                speed : { pps : 2, min : 2, max : 12 }, // copy  pps : pps, max : 10, min : 0 },
+                worldbounds : { die : true },
+                health : { life  : 1, maxLife : 1 }
+            } }
+        } )
+
+    }
     // function otherplayers(){
     //     const id1 = Items.create( {
     //         fly : { freefall : 1 },
@@ -403,7 +481,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             if ( speed ) {
                 Items.change( basket, { speed : false, bb : false, mass : false } )
             }
-       }
+        }
         function killBalloon(  ){
             mkRemoveAnim( balloon, [0,1,2,3,4,5,6,7], 1, 0 )
         }
@@ -460,69 +538,6 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         })
         return id
     }
-    const Models = {
-        test : Items.create( {} ),
-        missile : Items.create( {
-            model : {  model  : {
-                sprite : { type :  SpriteTypeNum['missile'] },
-                bb : {  },
-                mass : { mass : 5 },
-                collision : {
-                    category : COLLISION_CATEGORY.missile,
-                    mask : 0xffff
-                },
-                attack : { collision : 5 },
-                direction : {}, // copy
-                position : {}, // copy
-                speed : { pps : 12, min : 5, max : 12 }, // copy  pps : pps, max : 10, min : 0 },
-                worldbounds : { die : true },
-                health : { life  : 1, maxLife : 1 }
-            } }
-        } ),
-        bomb : Items.create( {
-            model : {  model  : {
-                fly : { freefall : true },
-                sprite : { type :  SpriteTypeNum['bomb'] },
-                bb : {  },
-                mass : { mass : 5 },
-                collision : {
-                    category : COLLISION_CATEGORY.bomb,
-                    mask : 0xffff
-                },
-                attack : { collision : 10 },
-                direction : {}, // copy
-                position : {}, // copy
-                speed : { pps : 2, min : 2, max : 12 }, // copy  pps : pps, max : 10, min : 0 },
-                worldbounds : { die : true },
-                health : { life  : 1, maxLife : 1 }
-            } }
-        } )
-
-    }
-    function createPlacer( { x1, y1, x2, y2 }, intervalle, onFreePosition, props ){        
-        
-        const radarId = Items.create( Object.assign({
-            placement : { x1, y1, x2, y2 },
-            collision : {
-                category : COLLISION_CATEGORY.radar,
-                mask : COLLISION_CATEGORY_ALL ^ ( COLLISION_CATEGORY.radar )
-            },
-            position : { },
-        }, props ))
-
-        
-        EventsWatchUntil(
-            () => Systems.placer.isAvailable( radarId ),
-            () => {
-                const position = Components.position.get( radarId )
-                if ( position === undefined ) return
-                Items.remove( radarId )
-                onFreePosition( position )
-            },
-            intervalle
-        )
-      
-    }
     function createAndPlacePlayer( name, score, colorScheme ) {
 
         const found = firstPlayerByName( name )
@@ -573,28 +588,14 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             worldbounds : { /*nobounce : true*/ },
 
         } )
-        let speedAndDirActuator 
-        if ( true ){
-            // dir & speed & r
-            const timeoutId1 = Items.create( {
-                removeWith : { ids:[id1] },
-                timeout : { start : version,  delay : 1, resetable : true }
-            })
-            const actId1 = Items.create( {
-                // removeWith : { ids:[id1] },
-                actuator : { playerName : name,
-                             targetId : id1,
-                             timeoutId : timeoutId1 ,
-                             commands : ['noseup','nosedown',
-                                         'powerup','powerdown',
-                                         'reverse'] }
-            })
-            speedAndDirActuator = actId1
-        }
+        
+        const speedAndDirTimedActuator = createDesignatedTimedActuator(
+            id1, 1, name, ['noseup','nosedown', 'powerup','powerdown', 'reverse' ]
+        )
         
         // missile launchers
         for ( let i = 0 ; i < 3 ; i++){
-            const launcherId1 = Items.create( {
+            const launcherId = Items.create( {
                 launcher : { modelId : Models.missile },
                 removeWith : { ids:[id1] },
                 attachement : { attachedToId : id1,
@@ -603,17 +604,9 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 position : {}, 
                 direction : {},
             })
-            const timeoutId3 = Items.create( {
-                removeWith : { ids:[id1] },
-                timeout : { start : version,  delay : 10,  resetable : true }
-            })
-            const actLauncherId1  = Items.create(  {
-                removeWith : { ids:[id1] },
-                actuator : { playerName : name,
-                             targetId : launcherId1,
-                             timeoutId : timeoutId3 ,
-                             commands : ['firemissile'] }
-            })
+            const fireMissileTimedActuator = createDesignatedTimedActuator(
+                launcherId, 10, name, ['firemissile']
+            )
         }
         // bomb launcher
         {
@@ -627,17 +620,9 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 position : {}, 
                 direction : {},
             })
-            const timeoutId = Items.create( {
-                removeWith : { ids:[id1] },
-                timeout : { start : version,  delay : launchDelay,  resetable : true }
-            })
-            const actLauncherId  = Items.create(  {
-                removeWith : { ids:[id1] },
-                actuator : { playerName : name,
-                             targetId : launcherId,
-                             timeoutId : timeoutId ,
-                             commands : ['firebomb'] }
-            })
+            const fireBombTimedActuator = createDesignatedTimedActuator(
+                launcherId, launchDelay, name, ['firebomb']
+            )
             
         }
         function dieAndRespawn( id ){
@@ -650,39 +635,47 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             Events.onTimeoutId( toId, W => {
                 Items.remove( id )
                 createAndPlacePlayer( player.name, player.score )
-                //Items.remove( skelId )
             })
             
+        }
+        function removeSpeedAndDirActuators(){
+            Items.remove( speedAndDirTimedActuator.actuatorId )
+            Items.remove( speedAndDirTimedActuator.timerId )            
+        }
+        function freeze(){
+            Items.change( id1, { propulsor : false,
+                                 mass : false,
+                                 speed : false } )
+        }
+        function removePropulsion(){
+            Items.change( id1, { propulsor : false } )
         }
         let crashed = false
         let deadInAir = false
         Events.onCollide( id1, (W,_, collideWith ) => {
             if ( Components.heightmap.has( collideWith ) ){
                 if ( crashed === false ){
+                    // first occurence of crashed
                     crashed = true
-                    Items.change( id1, { propulsor : false,
-                                         mass : false,
-                                         speed : false } )
-                    Items.remove( speedAndDirActuator )
+                    freeze()
+                    removeSpeedAndDirActuators()
                     if  ( deadInAir ){
+                        // crash happens after a death in air
                         dieAndRespawn( id1 )
                     }
                 }
             }
         })
-        
         Events.onDeath( id1, ( World, id ) => {
             if ( crashed ) {
-                //console.log('crash death')
+                // dead after a crash
                 dieAndRespawn( id1 )
             } else {
+                // wait for the crash to remove player
                 deadInAir = true
-                //console.log('in-air death')
-                
-                Items.change( id, { propulsor : false } )
-                Items.remove( speedAndDirActuator )
+                removePropulsion()
+                removeSpeedAndDirActuators()
             }
-
         })
         return id1
     }    
