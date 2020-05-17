@@ -573,20 +573,24 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             worldbounds : { /*nobounce : true*/ },
 
         } )
-        
-        // dir & speed & r
-        const timeoutId1 = Items.create( {
-            // removeWith : { ids:[id1] },
-            timeout : { start : version,  delay : 1, resetable : true }
-        })
-        const actId1 = Items.create( {
-            // removeWith : { ids:[id1] },
-            actuator : { playerName : name, targetId : id1, timeoutId : timeoutId1 ,
-                         commands : ['noseup','nosedown',
-                                     'powerup','powerdown',
-                                     'reverse'] }
-        })
-        
+        let speedAndDirActuator 
+        if ( true ){
+            // dir & speed & r
+            const timeoutId1 = Items.create( {
+                removeWith : { ids:[id1] },
+                timeout : { start : version,  delay : 1, resetable : true }
+            })
+            const actId1 = Items.create( {
+                // removeWith : { ids:[id1] },
+                actuator : { playerName : name,
+                             targetId : id1,
+                             timeoutId : timeoutId1 ,
+                             commands : ['noseup','nosedown',
+                                         'powerup','powerdown',
+                                         'reverse'] }
+            })
+            speedAndDirActuator = actId1
+        }
         
         // missile launchers
         for ( let i = 0 ; i < 3 ; i++){
@@ -659,7 +663,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                     Items.change( id1, { propulsor : false,
                                          mass : false,
                                          speed : false } )
-                    Items.remove( actId1 )
+                    Items.remove( speedAndDirActuator )
                     if  ( deadInAir ){
                         dieAndRespawn( id1 )
                     }
@@ -676,7 +680,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 //console.log('in-air death')
                 
                 Items.change( id, { propulsor : false } )
-                Items.remove( actId1 )
+                Items.remove( speedAndDirActuator )
             }
 
         })

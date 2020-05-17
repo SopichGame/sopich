@@ -325,10 +325,12 @@ export function mkSystems( W ){
                 }
 
                 
-                const ready = ( timeoutId === undefined ) ||  W.Systems.timeout.isOn( timeoutId )
+                const ready = ( timeoutId === undefined )
+                      ||  W.Systems.timeout.isOn( timeoutId )
+                
                 if (!ready){
                     return
-                }
+                } 
                 let didSomething = false
 
                 if ( ( actuatorHasCommand('powerup') || actuatorHasCommand('powerdown') ) ){
@@ -339,7 +341,8 @@ export function mkSystems( W ){
                         const powerDir = Math.max(-1,Math.min( nPowerup - nPowerdown, 1))
                         if ( powerDir !== 0 ){
                             const { power, min, max } = propulsor
-                            propulsor.power = clamp( power + powerDir, min, max )                                
+                            propulsor.power = clamp( power + powerDir, min, max )
+                            didSomething = 1
                         }
                     }
                 }
@@ -356,8 +359,7 @@ export function mkSystems( W ){
                                 direction.a16 = ( 16 + direction.a16 + noseDir ) % 16
                             } else if ( a8 !== undefined ){
                                 direction.a8 = ( 8 + direction.a8 + noseDir ) % 8
-                            }
-                            
+                            }                            
                             didSomething = 2
                         }
                     }
@@ -369,7 +371,7 @@ export function mkSystems( W ){
                         const count = input['reverse'] || 0
                         const previous = r.r || 0
                         r.r = ( count + previous ) % 2
-                        didSomething = ( previous !== r.r )?3:0
+                        didSomething = ( previous !== r.r )?3:didSomething
                     }
                 }
 
@@ -402,7 +404,6 @@ export function mkSystems( W ){
                     if ( ( launcher !== undefined ) && ( position !== undefined ) ){
                         const launches = input['firebomb']
                         if ( launches ){
-                            console.log('firebomb')
                             const model = Components.model.get( launcher.modelId )
                             if ( model ){
                                 const inheritFromLauncher =  {
@@ -413,7 +414,7 @@ export function mkSystems( W ){
                                 W.Items.create(
                                     Object.assign( {}, model.model, inheritFromLauncher )
                                 )
-                                didSomething = 4
+                                didSomething = 5
                             }
                         }
                     }
