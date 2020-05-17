@@ -419,7 +419,6 @@ export function mkSystems( W ){
                         }
                     }
                 }
-
                 
                 if ( didSomething ){
                     if ( timeoutId !== undefined ){
@@ -427,7 +426,6 @@ export function mkSystems( W ){
                     }
                 }
 
-                //              }
             }
             
             return {
