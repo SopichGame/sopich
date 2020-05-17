@@ -1,10 +1,14 @@
 import { prepareImages, ColorSchemes, symbGetInArray } from './symbols.js'
 import { clamp, length } from './utils.js'
 import { worldSize, HEIGHTMAP_TYPE } from './game.js'
+import BezierEasing from 'bezier-easing'
+import { DEBUG_BOUNDING_BOXES, DEBUG_COLLISIONS } from './game.js'
 
 const Images = prepareImages()
 const getImage = symbGetInArray( Images, 'iparams' )
-import { DEBUG_BOUNDING_BOXES, DEBUG_COLLISIONS } from './game.js'
+
+const DEBUG_PLAYER_ID = true
+const POSITION_HELPER_DURATION = 3500
 
 function getRandomColor() {
     if (Math.random()>0.5){
@@ -222,6 +226,130 @@ function findPlayerPosition( State ){
         }
     }
 }
+function getWorldWindow( center, $canvas, worldSize ){
+    const { x, y } = center
+    const { width, height } = $canvas
+    const { x1, x2, y1, y2 } = worldSize
+    const left = clamp(
+        x -  width / 2,
+        x1,
+        x2 - width
+    )
+    const right = left +  width
+    const bottom = clamp(
+        y - height /  2,
+        y1,
+        y2 -  height
+    )   
+    const top = bottom +  height
+    const worldWindow = { left, right, bottom, top, width, height }
+    return worldWindow
+}
+function Camera(){
+
+    const freeRoamDelay = 2000
+
+    function MakeupTarget( changePeriod ){
+        const position = { x : undefined, y : undefined }
+        let creationDate = 0
+        function setRandom( worldSize ){
+            position.x = worldSize.x1 + worldSize.w * Math.random()
+            position.y = worldSize.y1 + worldSize.h * Math.random()
+            creationDate = Date.now()
+        }
+        function update( worldSize ){
+            if ( ( Date.now() - creationDate ) > ( changePeriod * 1000 ) )
+                setRandom( worldSize )
+        }       
+        return { update, position }
+    }
+
+    const makeupTarget = MakeupTarget( 2 )
+    let userTarget = undefined,
+        lastUserTargetDate = undefined,
+        position = undefined
+    
+    function setTarget( position ){
+        if ( ( position !== undefined )
+             && ( position.x !== undefined )
+             && ( position.y !== undefined ) ){
+            userTarget = { x : position.x, y : position.y }
+            lastUserTargetDate = Date.now()
+        } else {
+            if ( lastUserTargetDate === undefined ){
+                lastUserTargetDate = Date.now()
+            }
+            userTarget = undefined
+        }
+    }
+    function update( worldSize ){
+        makeupTarget.update( worldSize )
+
+        let target
+        let way
+        if ( userTarget !== undefined ){
+            // use user targt
+            target = userTarget
+        } else {
+            const elapsedWithoutUserTarget = 
+                ( Date.now() - lastUserTargetDate )
+            
+            if ( elapsedWithoutUserTarget > freeRoamDelay ){
+                // use free roam after a while
+                target = makeupTarget.position
+            } else if ( position !== undefined ){
+                // before that, do not move if already somewhere
+                target = position
+            } else { 
+                // no old position to use, take center of the world
+                target = {
+                    x : ( worldSize.x1 + worldSize.x2 ) / 2,
+                    y : ( worldSize.y1 + worldSize.y2 ) / 2
+                }
+            }
+        }
+        
+        if ( position === undefined ) { 
+            position = { x : target.x, y : target.y }
+        }
+        
+        let dx = target.x - position.x
+        let dy = target.y - position.y
+        let md = Math.abs( dx ) + Math.abs( dy )
+        let ratio = 0.05
+        let threshold = 200
+        position.x = Math.floor( position.x + dx * ratio )
+        position.y = Math.floor( position.y + dy * ratio )
+    }
+    return { setTarget, update, getPosition : () => position }
+}
+
+function CanvasPositionTracker( abuptThresholdSq = Math.pow( 10, 2 ) ){
+    let position = undefined,
+        lastAbruptChange = undefined
+    function setPosition( p ){
+        //console.log('position set',{x,y})
+        if ( ( p === undefined ) || ( p.x === undefined ) || ( p.y === undefined ) ){
+            lastAbruptChange = Date.now()
+        } else {
+            const { x, y } = p
+            if ( position !== undefined ){
+                const dist = Math.pow( position.x - x, 2 ) + Math.pow( position.y - y, 2 )
+                if ( dist > abuptThresholdSq ){
+                    lastAbruptChange = Date.now()
+                }
+            } else {
+              //  lastAbruptChange = Date.now()
+            }
+            position = { x, y }
+        }
+    }
+    function elapsedSinceLastAbruptChange(){
+        return ( Date.now() - lastAbruptChange )
+        
+    }
+    return { setPosition, elapsedSinceLastAbruptChange }
+}
 
 export function Display() {
 
@@ -254,13 +382,10 @@ export function Display() {
         )
         
     }
+    const camera = Camera()
+    const positionTracker = CanvasPositionTracker()
+    const positionHelperEasing = BezierEasing(1.000, 0, 0, 1 )
 
-    let last_camera_target = undefined
-    let last_camera_target_to_center_dist = undefined
-    let position_helper_ttl = -1
-    let position_helper_max_ttl = 50
-
-    
     function display(){
 
         $context.imageSmoothingEnabled = false
@@ -271,65 +396,25 @@ export function Display() {
         if ( !State ) {
             return
         }
-        /*
-        if ( ! State.planes ){
-            return 
-        } 
-        if ( ! State.planes.length ){
-            return 
-        }*/
+       
         const leaderboard = State.leaderboard
         if ( leaderboard ){
             leaderboardDisplay.update( leaderboard ) 
         }
 
-        const me = State.me
-
-
+        //const me = State.me
 
         /*
          * camera
          */
-        //const camera_target = Object.assign({}, State[ me.type ][ me.idx ] )
-        // console.log('PLAYER IS',findPlayerPosition( State ))
-        const camera_target = Object.assign({}, findPlayerPosition( State ) )
-        //        console.log(camera_target)
-        if ( last_camera_target === undefined ){
-            last_camera_target = camera_target
-        } else {
-            let dx = camera_target.x - last_camera_target.x
-            let dy = camera_target.y - last_camera_target.y
-            let md = Math.abs( dx ) + Math.abs( dy )
-            let ratio = 0.05
-            let threshold = 200
-            if ( dx > threshold ){
-                // the movement is too big for a moving object
-                camera_target.x = Math.floor( last_camera_target.x + dx * ratio )
-                camera_target.y = Math.floor( last_camera_target.y + dy * ratio )
-            } 
-            last_camera_target = camera_target
-        }
-        function getWorldWindow( center, $canvas, worldSize ){
-            const { x, y } = center
-            const { width, height } = $canvas
-            const { x1, x2, y1, y2 } = worldSize
-            const left = clamp(
-                x -  width / 2,
-                x1,
-                x2 - width
-            )
-            const right = left +  width
-            const bottom = clamp(
-                y - height /  2,
-                y1,
-                y2 -  height
-            )   
-            const top = bottom +  height
-            const worldWindow = { left, right, bottom, top, width, height }
-            return worldWindow
-        }
+        const cameraTarget = findPlayerPosition( State )
+        camera.setTarget( cameraTarget )
+        camera.update( worldSize )
 
-        const worldWindow = getWorldWindow( camera_target, $canvas, worldSize )
+        /* 
+         * world window and transformation
+         */
+        const worldWindow = getWorldWindow( camera.getPosition(), $canvas, worldSize )
         function world_to_context( x, y ){
             return {
                 x : x - worldWindow.left  ,
@@ -337,26 +422,25 @@ export function Display() {
             }
         }
         
-        let camera_target_to_center = {
-            x : Math.abs( camera_target.x - ( worldWindow.left + worldWindow.right ) / 2 ),
-            y : Math.abs( camera_target.y - ( worldWindow.top + worldWindow.bottom ) / 2 ),
-        }
-        let camera_target_to_center_dist = length( camera_target_to_center )
-
-        // detect abrupt screen position change
-        let abrubt_target_screen_position_change = false
-        if ( last_camera_target_to_center_dist ){
-            let distsdiff = Math.abs( camera_target_to_center_dist - last_camera_target_to_center_dist )
-            if ( distsdiff > 10 ){
-                //console.log( distsdiff )
-                abrubt_target_screen_position_change = true
-                position_helper_ttl = position_helper_max_ttl + 1
+        /*
+         * perceived position helper
+         * 0 does not show 
+         * ...
+         * 1 fully show
+         */ 
+        let showPositionHelper, positionHelperShowRatio
+        {
+            if ( ( cameraTarget )
+                 && ( cameraTarget.x !== undefined )
+                 && ( cameraTarget.y !== undefined ) ){
+                const { x,y } = cameraTarget
+                positionTracker.setPosition( world_to_context( x, y ) )
             }
-        }
-        last_camera_target_to_center_dist = camera_target_to_center_dist
-        if ( position_helper_ttl > 0 ){
-            position_helper_ttl--
-            //console.log( position_helper_ttl )
+            const elapsed = positionTracker.elapsedSinceLastAbruptChange()
+            positionHelperShowRatio = positionHelperEasing(
+                1 - clamp( elapsed / POSITION_HELPER_DURATION, 0, 1 )
+            )
+            showPositionHelper = elapsed < POSITION_HELPER_DURATION 
         }
     
         function drawWorldRectangle( x, y, w, h, style ){
@@ -369,14 +453,6 @@ export function Display() {
             }
         }
 
-        /*
-          function context_to_world( cx, cy ){
-          return {
-          x : left - x ,
-          y : -200 + y - top 
-          }
-          }
-        */
         // sky
         let drawZone
         {
@@ -497,12 +573,25 @@ export function Display() {
                 //}
             }
         }
-        
         const planes = State.planes
         if ( planes ){
             State.planes.forEach( (plane) => {
-                const { human, reckless, age, ttl, x, y, r, a, p, cs, score, value,  name } = plane
-
+                const { human, reckless, age, ttl, x, y, r, a, p, cs, score, value,  name } = plane,
+                      wxy = world_to_context( x, y )
+                
+                const isCameraTarget = ( cameraTarget && ( cameraTarget.id === plane.id ) )
+                if ( showPositionHelper ){
+                    const r = positionHelperShowRatio
+                    if ( r > 0.5 ){
+                        $context.beginPath()
+                        $context.strokeStyle = `rgba(255,255,128,${ 0.5 * r })`
+                        $context.lineWidth = 16 * r
+                        $context.arc( wxy.x, wxy.y, r * 64, 0, 2 * Math.PI )
+                        $context.stroke()
+                        $context.closePath()
+                    }
+                }
+                
                 if ( plane.lf < 0 ){
                     trailPoints.add( x, y,  TrailColors.falling, 3, 2 )
                 }
@@ -516,7 +605,7 @@ export function Display() {
 
                 let va = a
                 let vr = r?1:0
-                let wxy = world_to_context( x, y )
+
                 const img = getImage( plane.sprt, plane )
                 if ( reckless ){
                     if ( Math.floor((age/2))%2 ){
@@ -532,41 +621,41 @@ export function Display() {
                 let col = ColorSchemes[cs][0]
                 let rgb = ( human === true )?`rgb(${col[0]},${col[1]},${col[2]})`:'gray'
                 $context.fillStyle = rgb
-
-                const is_target_plane = (  me.id === plane.id )
-                function target_helper( position_helper_ttl, position_helper_max_ttl ){
-                    const remain = position_helper_max_ttl -  position_helper_ttl
-                    const ratio = 1
-                    const maxheight = 64
-                    //const height = clamp(maxheight * position_helper_ttl / position_helper_max_ttl,0,30)
-                    const ratio2 = 1 - Math.pow(clamp( age, 0, position_helper_max_ttl ) /  position_helper_max_ttl,4)
-                    const height = clamp( maxheight * ratio2, 0, 16 )
+                
+                // const is_target_plane = (  me.id === plane.id )
+                // function target_helper( position_helper_ttl, position_helper_max_ttl ){
+                //     const remain = position_helper_max_ttl -  position_helper_ttl
+                //     const ratio = 1
+                //     const maxheight = 64
+                //     //const height = clamp(maxheight * position_helper_ttl / position_helper_max_ttl,0,30)
+                //     const ratio2 = 1 - Math.pow(clamp( age, 0, position_helper_max_ttl ) /  position_helper_max_ttl,4)
+                //     const height = clamp( maxheight * ratio2, 0, 16 )
                     
-                    const basewidth = height * ratio2 * 1.7
-                    const vpad = 10
-                    $context.beginPath()
-                    $context.moveTo( wxy.x + 16/2, wxy.y + vpad )
-                    $context.lineTo( wxy.x + 16/2 - basewidth / 2 , wxy.y + height + vpad )
-                    $context.lineTo( wxy.x + 16/2 + basewidth / 2 , wxy.y + height + vpad )
-                    $context.closePath()
-                    $context.fill()                    
-                }
-                if (  is_target_plane &&  /*( ( position_helper_ttl > 0 ) ||*/ ( age < position_helper_max_ttl ) ){
+                //     const basewidth = height * ratio2 * 1.7
+                //     const vpad = 10
+                //     $context.beginPath()
+                //     $context.moveTo( wxy.x + 16/2, wxy.y + vpad )
+                //     $context.lineTo( wxy.x + 16/2 - basewidth / 2 , wxy.y + height + vpad )
+                //     $context.lineTo( wxy.x + 16/2 + basewidth / 2 , wxy.y + height + vpad )
+                //     $context.closePath()
+                //     $context.fill()                    
+                // }
+                // if (  is_target_plane &&  /*( ( position_helper_ttl > 0 ) ||*/ ( age < position_helper_max_ttl ) ){
 
-                    if (reckless ){
-                        if  (!( Math.floor((age/2))%2 )){
-                            target_helper( position_helper_ttl, position_helper_max_ttl)
-                        }
-                    } else {
-                        target_helper( position_helper_ttl, position_helper_max_ttl)
-                    }
+                //     if (reckless ){
+                //         if  (!( Math.floor((age/2))%2 )){
+                //             target_helper( position_helper_ttl, position_helper_max_ttl)
+                //         }
+                //     } else {
+                //         target_helper( position_helper_ttl, position_helper_max_ttl)
+                //     }
                     
-                    //$context.font = `${ 10 + clamp( position_helper_ttl,0,30)  }px monospace`;
-                    /*$context.fillText(`▲`,
-                      wxy.x ,  wxy.y + 18 )*/
-                    //prefix = '?'
-                }
-                //if (  !  is_target_plane  ){
+                //     //$context.font = `${ 10 + clamp( position_helper_ttl,0,30)  }px monospace`;
+                //     /*$context.fillText(`▲`,
+                //       wxy.x ,  wxy.y + 18 )*/
+                //     //prefix = '?'
+                // }
+                //If (  !  is_target_plane  ){
                     //if ( human === true ){
                     $context.font = `${ 10  }px monospace`;
 
