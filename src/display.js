@@ -102,10 +102,10 @@ import { Island } from './object/island.js'
 
 function Stars(){
 
-/*
- * background stars
- */
-// fixed points needed when the ground is not visible
+    /*
+     * background stars
+     */
+    // fixed points needed when the ground is not visible
     function init_stars(){
         const count = 100
         const stars = new Array( count ).fill( 0 ).map( (_,i) => {
@@ -290,7 +290,7 @@ function Camera(){
             target = userTarget
         } else {
             const elapsedWithoutUserTarget = 
-                ( Date.now() - lastUserTargetDate )
+                  ( Date.now() - lastUserTargetDate )
             
             if ( elapsedWithoutUserTarget > freeRoamDelay ){
                 // use free roam after a while
@@ -337,7 +337,7 @@ function CanvasPositionTracker( abuptThresholdSq = Math.pow( 10, 2 ) ){
                     lastAbruptChange = Date.now()
                 }
             } else {
-              //  lastAbruptChange = Date.now()
+                //  lastAbruptChange = Date.now()
             }
             position = { x, y }
         }
@@ -394,7 +394,7 @@ export function Display() {
         if ( !State ) {
             return
         }
-       
+        
         const leaderboard = State.leaderboard
         if ( leaderboard ){
             leaderboardDisplay.update( leaderboard ) 
@@ -440,7 +440,7 @@ export function Display() {
             )
             showPositionHelper = elapsed < POSITION_HELPER_DURATION 
         }
-    
+        
         function drawWorldRectangle( x, y, w, h, style ){
             let wxy = world_to_context( x, y )
             {
@@ -531,7 +531,7 @@ export function Display() {
             })
         }
         
-       
+        
         // ground
         const ground = State.ground
         if ( ground ){
@@ -567,9 +567,9 @@ export function Display() {
                 /*
                 //if ( ttl > 0 ){
                 if ( broken ){
-                    putSprite( Images.target_hit, wxy.x , wxy.y )
+                putSprite( Images.target_hit, wxy.x , wxy.y )
                 } else {
-                    putSprite( Images.targets[as], wxy.x , wxy.y )
+                putSprite( Images.targets[as], wxy.x , wxy.y )
                 }*/
                 //}
             }
@@ -620,82 +620,48 @@ export function Display() {
                     
                 }
                 
+                $context.beginPath()
                 let col = ColorSchemes[cs][0]
                 let rgb = ( human === true )?`rgb(${col[0]},${col[1]},${col[2]})`:'gray'
-                $context.beginPath()
                 $context.fillStyle = rgb
                 
-                // const is_target_plane = (  me.id === plane.id )
-                // function target_helper( position_helper_ttl, position_helper_max_ttl ){
-                //     const remain = position_helper_max_ttl -  position_helper_ttl
-                //     const ratio = 1
-                //     const maxheight = 64
-                //     //const height = clamp(maxheight * position_helper_ttl / position_helper_max_ttl,0,30)
-                //     const ratio2 = 1 - Math.pow(clamp( age, 0, position_helper_max_ttl ) /  position_helper_max_ttl,4)
-                //     const height = clamp( maxheight * ratio2, 0, 16 )
+                
+                $context.font = `${ 10  }px monospace`;
+
+                const inScreen = ( wxy.x >= 0 ) && ( wxy.x <= $canvas.width )
+                      && ( wxy.y >= 0 ) && ( wxy.y <= $canvas.height )
+                
+                //                    const displayString = `${ name } ${ score.total } ${ value }`// ${ human?'human':'💻' } ${ inScreen?'yes':'no'}`
+                const displayString = `${ name }`// ${ human?'human':'💻' } ${ inScreen?'yes':'no'}`
+
+                if ( true || inScreen || (human === true) ){
                     
-                //     const basewidth = height * ratio2 * 1.7
-                //     const vpad = 10
-                //     $context.beginPath()
-                //     $context.moveTo( wxy.x + 16/2, wxy.y + vpad )
-                //     $context.lineTo( wxy.x + 16/2 - basewidth / 2 , wxy.y + height + vpad )
-                //     $context.lineTo( wxy.x + 16/2 + basewidth / 2 , wxy.y + height + vpad )
-                //     $context.closePath()
-                //     $context.fill()                    
-                // }
-                // if (  is_target_plane &&  /*( ( position_helper_ttl > 0 ) ||*/ ( age < position_helper_max_ttl ) ){
+                    const canvasClamped = {
+                        x : clamp( wxy.x, 0, $canvas.width - 7 * ( displayString.length + 1 ) ),
+                        y : clamp( wxy.y, 0, $canvas.height - 22 )
+                    }
+                    $context.fillText(displayString,
+                                      canvasClamped.x + 8,
+                                      canvasClamped.y + 18)
 
-                //     if (reckless ){
-                //         if  (!( Math.floor((age/2))%2 )){
-                //             target_helper( position_helper_ttl, position_helper_max_ttl)
-                //         }
-                //     } else {
-                //         target_helper( position_helper_ttl, position_helper_max_ttl)
-                //     }
+                    //if ( DEBUG_AGE ){
+                    /*$context.fillText(`${ name }[${age}](${p})${score.total}/${value}`,
+                      wxy.x + 8 , wxy.y + 18 )
+                    */
+                    //} else {
+                    /*
+                      $context.fillText(`${ name }(${p})${score.total}/${value}`,
+                      wxy.x + 8 , wxy.y + 18 )
+                    */
                     
-                //     //$context.font = `${ 10 + clamp( position_helper_ttl,0,30)  }px monospace`;
-                //     /*$context.fillText(`▲`,
-                //       wxy.x ,  wxy.y + 18 )*/
-                //     //prefix = '?'
-                // }
-                //If (  !  is_target_plane  ){
-                    //if ( human === true ){
-                    $context.font = `${ 10  }px monospace`;
-
-                    const inScreen = ( wxy.x >= 0 ) && ( wxy.x <= $canvas.width )
-                          && ( wxy.y >= 0 ) && ( wxy.y <= $canvas.height )
+                    /*$context.fillText(`${score.total}`,
+                      wxy.x + 8 , wxy.y + 18 )
+                    */
+                    /*context.fillText(`${ name }`,
+                      wxy.x + 8 , wxy.y + 18 )*/
                     
-                    //                    const displayString = `${ name } ${ score.total } ${ value }`// ${ human?'human':'💻' } ${ inScreen?'yes':'no'}`
-                    const displayString = `${ name }`// ${ human?'human':'💻' } ${ inScreen?'yes':'no'}`
-
-                    if ( true || inScreen || (human === true) ){
-                        
-                        const canvasClamped = {
-                            x : clamp( wxy.x, 0, $canvas.width - 7 * ( displayString.length + 1 ) ),
-                            y : clamp( wxy.y, 0, $canvas.height - 22 )
-                        }
-                        $context.fillText(displayString,
-                                          canvasClamped.x + 8,
-                                          canvasClamped.y + 18)
-
-                        //if ( DEBUG_AGE ){
-                            /*$context.fillText(`${ name }[${age}](${p})${score.total}/${value}`,
-                              wxy.x + 8 , wxy.y + 18 )
-                            */
-                        //} else {
-                            /*
-                              $context.fillText(`${ name }(${p})${score.total}/${value}`,
-                              wxy.x + 8 , wxy.y + 18 )
-                            */
-                            
-                            /*$context.fillText(`${score.total}`,
-                              wxy.x + 8 , wxy.y + 18 )
-                            */
-                            /*context.fillText(`${ name }`,
-                              wxy.x + 8 , wxy.y + 18 )*/
-                            
                     //}
-                    }   
+                }   
                 //}
                 
                 /*
