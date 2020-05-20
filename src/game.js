@@ -24,10 +24,12 @@ import { symbFilterProps,  TARGETS_TYPE, DEBRIS_TYPE_COUNT } from './symbols.js'
 // import { Tree, CONTINUE_VISIT, STOP_VISIT } from './coll.js'
 import { clamp, posmod } from './utils.js'
 //import { rectangle_intersection, rectangle_intersection_bool } from './rect.js'
-import { ColorSchemes, SpriteTypeNum } from './symbols.js'
+import { ColorSchemes, SpriteTypeNum, SpriteInfosByTypeNum } from './symbols.js'
 import { bonusessym12 } from './art/pixel12.js'
 import { NameGenerator } from './misc/namegenerator.js'
 import { ia } from './cipiu.js'
+import { itemToSpriteData } from './world/systems.js'
+
 // import { default as boxIntersect } from 'box-intersect'
 const seedrandom = require('seedrandom');
 
@@ -825,6 +827,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             debris : [],
             heightmaps : [],
             bonuses : [],
+            sprites : [],
             _boundingboxes : [],
             _lastcolls : []
         }
@@ -888,6 +891,39 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                     ... heightmap ,
                 })
             }
+
+            // if ( sprite && position ){
+                
+            //     const sprdata = itemToSpriteData( World, id )
+            //     sprdata.sprt = sprite.type
+            //     //console.log('sprdata',sprdata)
+
+            //     const dprops = symbFilterProps( 'dparams', sprdata )
+            //     //console.log('dprops',dprops)
+            //     // const dparams = SpriteInfosByTypeNum[ sprite.type ]['dparams']
+            //     // if ( dparams === undefined )
+            //     //     throw new Error('NO!')
+
+            //     // const p = dparams.reduce( 
+                
+            //     // const dataKeys = Object.keys( sprdata )
+            //     // for ( let i = 0 ; i < dataKeys.length ; i++ ){
+            //     //     const k = dataKeys[ i ]
+            //     //     if ( infos
+            //     // }
+
+            //     const obj = {
+            //         id,
+            //         x : position.x,
+            //         y : position.y,
+            //         ...dprops
+            //     }
+            //     categ.sprites.push(  obj )
+            //     //console.log(JSON.stringify( obj ) )
+                
+                
+            // }
+            
             if ( sprite && position ) {
                 if  ( ( sprite.type === SpriteTypeNum['bonuses'] )  ) {
                     categ.bonuses.push({
@@ -1020,9 +1056,10 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                         sprt : sprite.type,
                         cs : (color)?(color.cs):0,
                     })
-                } 
-                
+                }
             }
+                
+            
         })
         const commonUpdate = Object.assign(
             categ, {

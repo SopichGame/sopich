@@ -43,7 +43,7 @@ Promise.all([
             },*/
             //health : { life : 1, maxlife : 1 },
             //attack : { collision : 10 },
-            direction : {a16:5}, // copy
+            //direction : {a16:5}, // copy
             position : { x : 30, y : 30}, // copy
             //speed : {} // copy  pps : pps, max : 10, min : 0 },
         } 

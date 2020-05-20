@@ -60,15 +60,16 @@ export function itemToSpriteData( { Components }, id ){
     return sprData
 }
 
-import { prepareBottomHitmask, symbGetInArray, prepareHitmask, prepareDimensions }  from '../symbols.js'
-import { SpriteInfosByTypeNum, ColorSchemes, SpriteTypeNum } from '../symbols.js'
-
+import { prepareBottomHitmask, symbGetInArray,
+         prepareHitmask, prepareDimensions }  from '../symbols.js'
+import { SpriteInfosByTypeNum, ColorSchemes,
+         SpriteTypeNum } from '../symbols.js'
 
 const BottomHitMasks = prepareBottomHitmask()
 const getBottomHitMask = symbGetInArray( BottomHitMasks, 'bmparams' )
 
 const SpriteDimensions = prepareDimensions()
-const getSpriteDimensions =symbGetInArray( SpriteDimensions, 'dimparams' )
+const getSpriteDimensions = symbGetInArray( SpriteDimensions, 'dimparams' )
 
 const HitMasks = prepareHitmask()
 const getHitMask = symbGetInArray( HitMasks, 'mparams' )

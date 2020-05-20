@@ -554,202 +554,219 @@ export function Display() {
                 }
             }
         }
-        
-        const targets = State.targets
-        if ( targets ) {
-            for ( let i = 0, l = targets.length ; i < l ; i++ ){
-
-                const target = targets[i]
-                const { x, y, as, broken } = target
+        if ( false ){
+        const sprites = State.sprites
+        if ( sprites ) {
+            for ( let i = 0, l = sprites.length ; i < l ; i++ ){                
+                const sprite = sprites[ i ]
+                const { x, y } = sprite
                 let wxy = world_to_context( x, y )
-                putSprite( getImage( target.sprt, target ), wxy.x , wxy.y )
-                
-                /*
-                //if ( ttl > 0 ){
-                if ( broken ){
-                putSprite( Images.target_hit, wxy.x , wxy.y )
-                } else {
-                putSprite( Images.targets[as], wxy.x , wxy.y )
-                }*/
-                //}
+                try {
+                    putSprite( getImage( sprite.sprt, sprite ), wxy.x , wxy.y )
+                } catch ( e ){
+                    // console.error('bad sprite', sprite )
+                }
+                        
             }
         }
-        const planes = State.planes
-        if ( planes ){
-            State.planes.forEach( (plane) => {
-                const { human, reckless, age, ttl, x, y, r, a, p, cs, score, value,  name } = plane,
-                      wxy = world_to_context( x, y )
-                
-                const isCameraTarget = ( cameraTarget && ( cameraTarget.id === plane.id ) )
-                if ( showPositionHelper ){
-                    const r = positionHelperShowRatio
-                    if ( r > 0.5 ){
-                        $context.beginPath()
-                        $context.strokeStyle = `rgba(255,255,128,${ 0.5 * r })`
-                        $context.lineWidth = 16 * r
-                        $context.arc( wxy.x, wxy.y, r * 64, 0, 2 * Math.PI )
-                        $context.stroke()
-                        $context.closePath()
-                    }
-                }
-                
-                if ( plane.lf < 0 ){
-                    trailPoints.add( x, y,  TrailColors.falling, 3, 2 )
-                }
-                if ( plane.dmg ){
-                    trailPoints.add( x, y,  TrailColors.debris, 4, 2 )
-                }
-                if ( ttl < 0 ){
-                    return
-                }
-                $context.beginPath()
-                $context.fillStyle = 'black'
+        } else {
 
-                let va = a
-                let vr = r?1:0
+            const targets = State.targets
+            if ( targets ) {
+                for ( let i = 0, l = targets.length ; i < l ; i++ ){
 
-                const img = getImage( plane.sprt, plane )
-                if ( reckless ){
-                    if ( Math.floor((age/2))%2 ){
-                        putSprite( img, wxy.x  , wxy.y )
-                    } 
-                } else {
-                    putSprite( img, wxy.x  , wxy.y )
-
-                    // drawWorldRectangle( x,y, img.width, img.height, 'red' )
+                    const target = targets[i]
+                    const { x, y, as, broken } = target
+                    let wxy = world_to_context( x, y )
+                    putSprite( getImage( target.sprt, target ), wxy.x , wxy.y )
                     
-                }
-                
-                $context.beginPath()
-                let col = ColorSchemes[cs][0]
-                let rgb = ( human === true )?`rgb(${col[0]},${col[1]},${col[2]})`:'gray'
-                $context.fillStyle = rgb
-                
-                
-                $context.font = `${ 10  }px monospace`;
-
-                const inScreen = ( wxy.x >= 0 ) && ( wxy.x <= $canvas.width )
-                      && ( wxy.y >= 0 ) && ( wxy.y <= $canvas.height )
-                
-                //                    const displayString = `${ name } ${ score.total } ${ value }`// ${ human?'human':'💻' } ${ inScreen?'yes':'no'}`
-                const displayString = `${ name }`// ${ human?'human':'💻' } ${ inScreen?'yes':'no'}`
-
-                if ( true || inScreen || (human === true) ){
-                    
-                    const canvasClamped = {
-                        x : clamp( wxy.x, 0, $canvas.width - 7 * ( displayString.length + 1 ) ),
-                        y : clamp( wxy.y, 0, $canvas.height - 22 )
-                    }
-                    $context.fillText(displayString,
-                                      canvasClamped.x + 8,
-                                      canvasClamped.y + 18)
-
-                    //if ( DEBUG_AGE ){
-                    /*$context.fillText(`${ name }[${age}](${p})${score.total}/${value}`,
-                      wxy.x + 8 , wxy.y + 18 )
-                    */
-                    //} else {
                     /*
-                      $context.fillText(`${ name }(${p})${score.total}/${value}`,
-                      wxy.x + 8 , wxy.y + 18 )
-                    */
-                    
-                    /*$context.fillText(`${score.total}`,
-                      wxy.x + 8 , wxy.y + 18 )
-                    */
-                    /*context.fillText(`${ name }`,
-                      wxy.x + 8 , wxy.y + 18 )*/
-                    
+                    //if ( ttl > 0 ){
+                    if ( broken ){
+                    putSprite( Images.target_hit, wxy.x , wxy.y )
+                    } else {
+                    putSprite( Images.targets[as], wxy.x , wxy.y )
+                    }*/
                     //}
-                }   
-                //}
-                
-                /*
-                  
-                  $context.fillText(`${ name }`,// ${Math.floor(x)},${Math.floor(y)},${p}`,
-                  wxy.x + 8 , wxy.y + 18 )
-                */
-            })
-        }        
-        
-        const bombs = State.bombs
-        if ( bombs ) {
-            for ( let i = 0, l = bombs.length ; i < l ; i++ ){
-                const bomb = bombs[i]
-                let { x, y } = bomb                
-                let wxy = world_to_context( x, y )
-                putSprite( getImage( bomb.sprt, bomb ), wxy.x , wxy.y )
-            }
-        }
-
-        const missiles = State.missiles
-        if ( missiles ) {
-            for ( let i = 0, l = missiles.length ; i < l ; i++ ){
-                const missile = missiles[i]
-                let { x, y } = missile                
-                let wxy = world_to_context( x, y )
-                putSprite( getImage( missile.sprt, missile ), wxy.x , wxy.y )
-                trailPoints.add( x, y, TrailColors.missiles, 2, 1 )
-            }
-        }
-        
-        const guidedmissiles = State.guidedmissiles
-        if ( guidedmissiles ) {
-            for ( let i = 0, l = guidedmissiles.length ; i < l ; i++ ){
-                const guidedmissile = guidedmissiles[i]
-                let { x, y } = guidedmissile                
-                let wxy = world_to_context( x, y )
-                putSprite( getImage( guidedmissile.sprt, guidedmissile ), wxy.x , wxy.y )
-                trailPoints.add( x, y, TrailColors.guidedmissiles, 3, 2 )
-            }
-        }
-
-        const debris = State.debris
-        if (debris){
-            for ( let j = 0, ll = debris.length ; j < ll ; j++ ){
-                let debri = debris[ j ]
-                let { x, y, a, ttl, cs, dtype } = debri
-                let wxy = world_to_context( x, y )
-                if (Math.random()>0.8){
-                    trailPoints.add( x, y,TrailColors.debris,3, 2 )
                 }
-                putSprite( getImage( debri.sprt, debri ), wxy.x , wxy.y )             
             }
-        }
-        const flocks = State.flocks
-        if (flocks){
-            for ( let j = 0, ll = flocks.length ; j < ll ; j++ ){
-                const flock = flocks[ j ]
-                let { x, y, as } = flock
-                let wxy = world_to_context( x, y )
-                putSprite( getImage( flock.sprt, flock ), wxy.x , wxy.y )
+            const planes = State.planes
+            if ( planes ){
+                State.planes.forEach( (plane) => {
+                    const { human, reckless, age, ttl, x, y, r, a, p, cs, score, value,  name } = plane,
+                          wxy = world_to_context( x, y )
+                    
+                    const isCameraTarget = ( cameraTarget && ( cameraTarget.id === plane.id ) )
+                    if ( showPositionHelper ){
+                        const r = positionHelperShowRatio
+                        if ( r > 0.5 ){
+                            $context.beginPath()
+                            $context.strokeStyle = `rgba(255,255,128,${ 0.5 * r })`
+                            $context.lineWidth = 16 * r
+                            $context.arc( wxy.x, wxy.y, r * 64, 0, 2 * Math.PI )
+                            $context.stroke()
+                            $context.closePath()
+                        }
+                    }
+                    
+                    if ( plane.lf < 0 ){
+                        trailPoints.add( x, y,  TrailColors.falling, 3, 2 )
+                    }
+                    if ( plane.dmg ){
+                        trailPoints.add( x, y,  TrailColors.debris, 4, 2 )
+                    }
+                    if ( ttl < 0 ){
+                        return
+                    }
+                    $context.beginPath()
+                    $context.fillStyle = 'black'
+
+                    let va = a
+                    let vr = r?1:0
+
+                    const img = getImage( plane.sprt, plane )
+                    if ( reckless ){
+                        if ( Math.floor((age/2))%2 ){
+                            putSprite( img, wxy.x  , wxy.y )
+                        } 
+                    } else {
+                        putSprite( img, wxy.x  , wxy.y )
+
+                        // drawWorldRectangle( x,y, img.width, img.height, 'red' )
+                        
+                    }
+                    
+                    $context.beginPath()
+                    let col = ColorSchemes[cs][0]
+                    let rgb = ( human === true )?`rgb(${col[0]},${col[1]},${col[2]})`:'gray'
+                    $context.fillStyle = rgb
+                    
+                    
+                    $context.font = `${ 10  }px monospace`;
+
+                    const inScreen = ( wxy.x >= 0 ) && ( wxy.x <= $canvas.width )
+                          && ( wxy.y >= 0 ) && ( wxy.y <= $canvas.height )
+                    
+                    //                    const displayString = `${ name } ${ score.total } ${ value }`// ${ human?'human':'💻' } ${ inScreen?'yes':'no'}`
+                    const displayString = `${ name }`// ${ human?'human':'💻' } ${ inScreen?'yes':'no'}`
+
+                    if ( true || inScreen || (human === true) ){
+                        
+                        const canvasClamped = {
+                            x : clamp( wxy.x, 0, $canvas.width - 7 * ( displayString.length + 1 ) ),
+                            y : clamp( wxy.y, 0, $canvas.height - 22 )
+                        }
+                        $context.fillText(displayString,
+                                          canvasClamped.x + 8,
+                                          canvasClamped.y + 18)
+
+                        //if ( DEBUG_AGE ){
+                        /*$context.fillText(`${ name }[${age}](${p})${score.total}/${value}`,
+                          wxy.x + 8 , wxy.y + 18 )
+                        */
+                        //} else {
+                        /*
+                          $context.fillText(`${ name }(${p})${score.total}/${value}`,
+                          wxy.x + 8 , wxy.y + 18 )
+                        */
+                        
+                        /*$context.fillText(`${score.total}`,
+                          wxy.x + 8 , wxy.y + 18 )
+                        */
+                        /*context.fillText(`${ name }`,
+                          wxy.x + 8 , wxy.y + 18 )*/
+                        
+                        //}
+                    }   
+                    //}
+                    
+                    /*
+                      
+                      $context.fillText(`${ name }`,// ${Math.floor(x)},${Math.floor(y)},${p}`,
+                      wxy.x + 8 , wxy.y + 18 )
+                    */
+                })
+            }        
+            
+            const bombs = State.bombs
+            if ( bombs ) {
+                for ( let i = 0, l = bombs.length ; i < l ; i++ ){
+                    const bomb = bombs[i]
+                    let { x, y } = bomb                
+                    let wxy = world_to_context( x, y )
+                    putSprite( getImage( bomb.sprt, bomb ), wxy.x , wxy.y )
+                }
             }
-        }
-        const oxs = State.oxs
-        if (oxs){
-            for ( let j = 0, ll = oxs.length ; j < ll ; j++ ){
-                const ox = oxs[ j ]
-                let { x, y, as } = ox
-                let wxy = world_to_context( x, y )
-                putSprite( getImage( ox.sprt, ox ), wxy.x , wxy.y )
+
+            const missiles = State.missiles
+            if ( missiles ) {
+                for ( let i = 0, l = missiles.length ; i < l ; i++ ){
+                    const missile = missiles[i]
+                    let { x, y } = missile                
+                    let wxy = world_to_context( x, y )
+                    putSprite( getImage( missile.sprt, missile ), wxy.x , wxy.y )
+                    trailPoints.add( x, y, TrailColors.missiles, 2, 1 )
+                }
             }
-        }
-        const balloons = State.balloons
-        if (balloons){
-            for ( let j = 0, ll = balloons.length ; j < ll ; j++ ){
-                const balloon = balloons[ j ]
-                let { x, y, as } = balloon
-                let wxy = world_to_context( x, y )
-                putSprite( getImage( balloon.sprt, balloon ), wxy.x , wxy.y )
+            
+            const guidedmissiles = State.guidedmissiles
+            if ( guidedmissiles ) {
+                for ( let i = 0, l = guidedmissiles.length ; i < l ; i++ ){
+                    const guidedmissile = guidedmissiles[i]
+                    let { x, y } = guidedmissile                
+                    let wxy = world_to_context( x, y )
+                    putSprite( getImage( guidedmissile.sprt, guidedmissile ), wxy.x , wxy.y )
+                    trailPoints.add( x, y, TrailColors.guidedmissiles, 3, 2 )
+                }
             }
-        }
-        const bonuses = State.bonuses
-        if ( bonuses ){
-            for ( let j = 0, ll = bonuses.length ; j < ll ; j++ ){
-                const bonus = bonuses[ j ]
-                let { x, y, as } = bonus
-                let wxy = world_to_context( x, y )
-                putSprite( getImage( bonus.sprt, bonus ), wxy.x , wxy.y )
+
+            const debris = State.debris
+            if (debris){
+                for ( let j = 0, ll = debris.length ; j < ll ; j++ ){
+                    let debri = debris[ j ]
+                    let { x, y, a, ttl, cs, dtype } = debri
+                    let wxy = world_to_context( x, y )
+                    if (Math.random()>0.8){
+                        trailPoints.add( x, y,TrailColors.debris,3, 2 )
+                    }
+                    putSprite( getImage( debri.sprt, debri ), wxy.x , wxy.y )             
+                }
+            }
+            const flocks = State.flocks
+            if (flocks){
+                for ( let j = 0, ll = flocks.length ; j < ll ; j++ ){
+                    const flock = flocks[ j ]
+                    let { x, y, as } = flock
+                    let wxy = world_to_context( x, y )
+                    putSprite( getImage( flock.sprt, flock ), wxy.x , wxy.y )
+                }
+            }
+            const oxs = State.oxs
+            if (oxs){
+                for ( let j = 0, ll = oxs.length ; j < ll ; j++ ){
+                    const ox = oxs[ j ]
+                    let { x, y, as } = ox
+                    let wxy = world_to_context( x, y )
+                    putSprite( getImage( ox.sprt, ox ), wxy.x , wxy.y )
+                }
+            }
+            const balloons = State.balloons
+            if (balloons){
+                for ( let j = 0, ll = balloons.length ; j < ll ; j++ ){
+                    const balloon = balloons[ j ]
+                    let { x, y, as } = balloon
+                    let wxy = world_to_context( x, y )
+                    putSprite( getImage( balloon.sprt, balloon ), wxy.x , wxy.y )
+                }
+            }
+            const bonuses = State.bonuses
+            if ( bonuses ){
+                for ( let j = 0, ll = bonuses.length ; j < ll ; j++ ){
+                    const bonus = bonuses[ j ]
+                    let { x, y, as } = bonus
+                    let wxy = world_to_context( x, y )
+                    putSprite( getImage( bonus.sprt, bonus ), wxy.x , wxy.y )
+                }
             }
         }
         const _boundingboxes = State._boundingboxes
