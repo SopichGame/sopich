@@ -56,7 +56,7 @@ export function itemToSpriteData( { Components }, id ){
         bt : ((subtypes)?(subtypes.bt):0),
         dt : ((subtypes)?(subtypes.dt):0),
     }
-  
+    
     return sprData
 }
 
@@ -176,6 +176,14 @@ export function mkSystems( W ){
                 
             }
         })(),
+        ( () => {
+            const { Components, Items } = W
+            const playersByTeam = new Map()
+            return {
+                name : 'team',
+            }
+        })(),
+        
         ( () => {
             return {
                 name : 'animation',
@@ -410,7 +418,7 @@ export function mkSystems( W ){
                         }
                     }
                 }
-                   
+                
                 if ( didSomething ){
                     if ( timeoutId !== undefined ){
                         W.Systems.timeout.reset( timeoutId )

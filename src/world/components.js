@@ -57,8 +57,8 @@ export function mkComponents(){
             } )
         }),
         player :  cmpStrg( {
-            copy : ( { name, score } ) => ( {
-                name, score
+            copy : ( { name, score, teamId } ) => ( {
+                name, score, teamId
             } )
         }),
         actuator : cmpStrg( {
@@ -146,6 +146,11 @@ export function mkComponents(){
         worldbounds : cmpStrg( {
             copy : ( { nobounce, die, noclamp } ) => ( {
                 nobounce, die, noclamp
+            })
+        }),
+        team : cmpStrg( {
+            copy : ( { name } ) => ( {
+                
             })
         }),
         
