@@ -403,6 +403,10 @@ export function mkSystems( W ){
                                 direction : direction,
                                 position : { x : position.x, y : position.y },
                             }
+                            const color = Components.color.get( targetId )
+                            if ( color ){
+                                inheritFromLauncher.color = color
+                            }
                             const dropped = W.Items.create(
                                 Object.assign( {}, model.model, inheritFromLauncher )
                             )
@@ -541,7 +545,8 @@ export function mkSystems( W ){
                 onStep : () => {
                     Components.attachement.forEach( ([ id, attachement ]) => {
                         const { attachedToId, location, radius,
-                                noDirection, noPosition, noSpeed } = Components.attachement.get( id )
+                                noDirection, noPosition, noSpeed,
+                                noColor } = Components.attachement.get( id )
 
                         if ( !noDirection ){
                             const attachementDirection = Components.direction.get( id )
@@ -581,6 +586,14 @@ export function mkSystems( W ){
                             const attachedToSpeed = Components.speed.get( attachedToId )
                             if (( attachementSpeed !== undefined ) && ( attachedToSpeed != undefined ) ){
                                 attachementSpeed.pps = attachedToSpeed.pps
+                            }
+                        }
+
+                        if ( !noColor ){
+                            const attachementColor = Components.color.get( id )
+                            const attachedToColor = Components.color.get( attachedToId )
+                            if (( attachementColor !== undefined ) && ( attachedToColor != undefined ) ){
+                                attachementColor.cs = attachedToColor.cs
                             }
                         }
                     })

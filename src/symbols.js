@@ -338,7 +338,9 @@ export function symbGetInArray( array, prop = 'iparams' ){
         return sprInfos[ prop ].reduce( (r, p) => {
             const v = params[ p ]
             if ( !r ){
-                console.log('ERROR ! SPRITE PROP !',{array,prop,spriteTypeNum,params})
+                console.log('ERROR ! SPRITE PROP !',{
+                    sprInfos,sprinfopro:sprInfos[prop],array,prop,spriteTypeNum,params,p
+                })
             }
             const l = (r.length)?(r.length):1
             return r[v%l]

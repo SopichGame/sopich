@@ -97,8 +97,8 @@ export function mkComponents(){
             } )
         }),
         attachement : cmpStrg( {
-            copy : ( { attachedToId, location, radius, noDirection, noPosition, noSpeed } ) => ( {
-                attachedToId, location, radius, noDirection, noPosition, noSpeed
+            copy : ( { attachedToId, location, radius, noDirection, noPosition, noSpeed, noColor } ) => ( {
+                attachedToId, location, radius, noDirection, noPosition, noSpeed, noColor
             } )
         }),
         launcher  : cmpStrg( {

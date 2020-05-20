@@ -1,3 +1,4 @@
+
 // ia
 // - masks
 // game end/start
@@ -226,7 +227,8 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 position : {}, // copy
                 speed : { pps : undefined, min : 11, max : 12 }, // copy  pps : pps, max : 10, min : 0 },
                 worldbounds : { die : true },
-                health : { life  : 1, maxLife : 1 }
+                health : { life  : 1, maxLife : 1 },
+                color : {} // copy
             } }
         } ),
         bomb : Items.create( {
@@ -244,7 +246,8 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 position : {}, // copy
                 speed : { pps : undefined, min : 1, max : 4 }, // copy  pps : pps, max : 10, min : 0 },
                 worldbounds : { die : true },
-                health : { life  : 1, maxLife : 1 }
+                health : { life  : 1, maxLife : 1 },
+                color : {} // copy
             } }
         } )
 
@@ -458,7 +461,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             bb : {},
             direction : { a16 : 12 }, // { x : undefined , y : undefined }
             speed : { pps : 1, min : 0, max : 3 },
-            color : { cs : 2 },
+            color : { cs : 3 },
             health : { life : 5, maxLife : 10 },
             attack : { collision : 2 },
 
@@ -472,7 +475,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             collision : { pixel : true,
                           category : COLLISION_CATEGORY.balloon,
                           mask : COLLISION_CATEGORY_ALL^(COLLISION_CATEGORY.balloon|COLLISION_CATEGORY.basket) },
-            color : { cs : 2 },
+            color : { },
             bb : {},
             health : { life : 5, maxLife : 10 },
             attack : { collision : 1 },
@@ -605,7 +608,8 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                                 radius : 18 * ( 1 + i ) },
                 position : {}, 
                 direction : {},
-                speed : {}
+                speed : {},
+                color : {},
             })
             const fireMissileTimedActuator = createDesignatedTimedActuator(
                 launcherId, 10, name, ['firemissile']
@@ -623,7 +627,9 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                                 radius : 18 * ( 1 ) },
                 position : {}, 
                 direction : {},
-                speed : {}
+                speed : {},
+                color : {},
+
             })
             Events.pulse( 1, () => {
                 const speed = World.Components.speed.get( launcherId )
@@ -941,7 +947,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                         x : position.x,
                         y : position.y,
                         sprt : sprite.type,
-                        cs : (color)?(color.cs):0,
+                        cs : (color)?(color.cs || 0):0,
                         as : ( animation && animation.step )?(animation.step):0,
                     })
                 } else if  ( ( sprite.type === SpriteTypeNum['basket'] )  ) {
@@ -950,7 +956,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                         x : position.x,
                         y : position.y, 
                         sprt : sprite.type,
-                        cs : (color)?(color.cs):0,                        
+                        cs : (color)?(color.cs || 0):0,                        
                         as : ( animation && animation.step )?(animation.step):0,
                     })
                 } else if  ( ( sprite.type === SpriteTypeNum['ox'] )  ) {
