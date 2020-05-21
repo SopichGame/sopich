@@ -819,22 +819,22 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         }
 
         function handleDeath( id ){
+            console.log( 'handleDeath',id)
             const Components = World.Components
             if (  Components.heightmap.has( id ) ){
             } else {
                 const sprite = Components.sprite.get( id )
-                if ( sprite
-                     && (
-                         ( sprite.type === SpriteTypeNum['missile'] )
-                             || ( sprite.type === SpriteTypeNum['bomb'] )
-                     )){
-                    Items.remove( id )
-                }}
+                if ( sprite ){
+                    if (( sprite.type === SpriteTypeNum['missile'] )
+                        || ( sprite.type === SpriteTypeNum['bomb'] ) )
+                        Items.remove( id )
+                }
+            }
         }
         //
         World.Systems.collision.getCollidingPairs().forEach( ({ id1, id2 }) => {            
         })        
-        World.Systems.health.getDeathList().forEach( id => {
+        World.Systems.health.getDeathList().forEach( (_,id) => {
             handleDeath( id )
         })
 
