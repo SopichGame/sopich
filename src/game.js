@@ -131,6 +131,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
     const World = mkWorld()
     const { Components, Systems, Items, Events } = World
     const seed = "braoume"
+    
     function EventsWatchUntil( condition, f, interval = 1 ){
         const timeoutId = Events.pulse( interval, watchF )
         function watchF(){
@@ -186,7 +187,6 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         })
         return { timeoutId, actuatorId }
     }
-
     function createPlacer( { x1, y1, x2, y2 }, intervalle, onFreePosition, props ){        
         
         const radarId = Items.create( Object.assign({
@@ -210,6 +210,21 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             intervalle
         )
         
+    }
+    function attachRadar( id1, options ){
+        // radar
+        const radarId = Items.create( Object.assign( {
+            attachement : { attachedToId : id1, nospeed : true },
+            removeWith : { ids:[id1] },
+            collision : {
+                category : COLLISION_CATEGORY.radar,
+                mask : COLLISION_CATEGORY_ALL ^ ( COLLISION_CATEGORY.radar )
+            },
+            position : {},
+            direction : {},
+            bb : { w : 64, h : 64 } ,
+        }, options ))
+        return radarId
     }
     const Models = {
         test : Items.create( {} ),
@@ -368,6 +383,12 @@ export function Game( { tellPlayer, // called with user centered world, each wor
     //         })
     //     }
     // }
+    function createTeam( name, total ){
+        return Items.create({
+            team : { name },
+            score : { total }
+        })
+    }
     function createWater( ){
         const waterlevel = 40
         const waterData = { w : worldSize.w, hmin : waterlevel, hmax : waterlevel  }
@@ -427,21 +448,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             })
         }
     }
-    function attachRadar( id1, options ){
-        // radar
-        const radarId = Items.create( Object.assign( {
-            attachement : { attachedToId : id1, nospeed : true },
-            removeWith : { ids:[id1] },
-            collision : {
-                category : COLLISION_CATEGORY.radar,
-                mask : COLLISION_CATEGORY_ALL ^ ( COLLISION_CATEGORY.radar )
-            },
-            position : {},
-            direction : {},
-            bb : { w : 64, h : 64 } ,
-        }, options ))
-        return radarId
-    }
+    
 
     function createFlyingBalloon( { Items, Components, getVersion } )  {
 
@@ -543,7 +550,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         })
         return id
     }
-    function createAndPlacePlayer( name, score, colorScheme ) {
+    function createAndPlacePlayer( { name, totalScore, colorScheme, teamId } ) {
 
         const found = firstPlayerByName( name )
         if ( found )
@@ -551,7 +558,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         
         createPlacer( worldSize, 1, ( freePosition ) => {
             console.log('occupation', freePosition, 'isAvailable' )
-            const id = createPlayer( name, score, colorScheme )
+            const id = createPlayer( { name, totalScore, colorScheme, teamId } )
             const position = Components.position.get( id )
             if ( position ){
                 position.x = freePosition.x
@@ -560,9 +567,10 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         }, {
             bb : { w : 128, h : 128 },
             player : { name },
+            member : { teamId },
         })
     }
-    function createPlayer( name, score, colorScheme ){
+    function createPlayer( { name, totalScore, colorScheme, teamId } ){
         
         if ( colorScheme === undefined ){
             // get a constant random color scheme from name
@@ -571,9 +579,11 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             colorScheme = num
         }
         let version = World.getVersion()
-        const id1 = Items.create( {
+        const id1 = Items.create( {            
             fly : { freefall : 0 },
-            player : { name, score : 2 },
+            player : { name },
+            score : { total : totalScore },
+            member : { teamId },
             position : { x : 200 + Math.random() * 800, y : 200 },
             direction : { a16 : 0 },
             propulsor : { power : 8, min : 0, max : 10 },
@@ -610,6 +620,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 direction : {},
                 speed : {},
                 color : {},
+                owned : { ownerId : id1 },
             })
             const fireMissileTimedActuator = createDesignatedTimedActuator(
                 launcherId, 10, name, ['firemissile']
@@ -629,7 +640,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 direction : {},
                 speed : {},
                 color : {},
-
+                owned : { ownerId : id1 },
             })
             Events.pulse( 1, () => {
                 const speed = World.Components.speed.get( launcherId )
@@ -645,11 +656,16 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 { timeout : { start : World.getVersion(), delay  : 60  }}
             )
             const player = Components.player.get( id )
+            const member = Components.member.get( id )
+            const score = Components.score.get( id )
             const color = Components.color.get( id )
-            
+            console.log('dead',{ player, member, color })
             Events.onTimeoutId( toId, W => {
                 Items.remove( id )
-                createAndPlacePlayer( player.name, player.score )
+                createAndPlacePlayer( { name : player.name,
+                                        totalScore : score.total,
+                                        teamId : member.teamId
+                                      })
             })
             
         }
@@ -681,7 +697,12 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 }
             }
         })
+        Events.onKill( id1, ( World, _, killed ) => {
+            console.log('id',id1,'kills', killed )
+        })
         Events.onDeath( id1, ( World, id ) => {
+            console.log('* player is dead')
+
             if ( crashed ) {
                 // dead after a crash
                 dieAndRespawn( id1 )
@@ -767,6 +788,8 @@ export function Game( { tellPlayer, // called with user centered world, each wor
     }
     function iii(){
         let timeoutid
+        createTeam('red',0)
+        createTeam('blue',0)
         createWater( World ) 
         createIslands( World ) 
         createFlyingBalloon( World )
@@ -800,17 +823,16 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             if (  Components.heightmap.has( id ) ){
             } else {
                 const sprite = Components.sprite.get( id )
-                if ( sprite ) {
-                    if ( ( sprite.type === SpriteTypeNum['missile'] )
-                         || ( sprite.type === SpriteTypeNum['bomb'] ) ){
-                        Items.remove( id )
-                    } 
-                }
-            }
+                if ( sprite
+                     && (
+                         ( sprite.type === SpriteTypeNum['missile'] )
+                             || ( sprite.type === SpriteTypeNum['bomb'] )
+                     )){
+                    Items.remove( id )
+                }}
         }
         //
-        World.Systems.collision.getCollidingPairs().forEach( ({ id1, id2 }) => {
-            
+        World.Systems.collision.getCollidingPairs().forEach( ({ id1, id2 }) => {            
         })        
         World.Systems.health.getDeathList().forEach( id => {
             handleDeath( id )
@@ -843,7 +865,35 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         if ( !DEBUG_COLLISIONS ){
             delete categ._lastcolls
         }
-        
+        const mkLeaderboard = ( World.getVersion() % 10 ) === 0 
+        const leaderboard = []
+        if ( mkLeaderboard ){
+
+            Components.score.forEach( ([id,score]) => {
+                const player = Components.player.get( id )
+                if ( player ){
+                    let displayName = player.name
+                    const member = Components.member.get( id )
+                    if ( member ){
+                        const { teamId } = member
+                        if ( teamId !== undefined ){
+                            const team = Components.team.get( teamId )
+                            if ( team !== undefined ){
+                                displayName = `[${ team.name }] ${ player.name }`
+                            }
+                        }
+                    }
+                    leaderboard.push( { username : displayName,
+                                        score : score.total } )
+                }
+                const team  = Components.team.get( id )
+                if ( team !== undefined ){
+                    const displayName = `${ team.name }`
+                    leaderboard.push( { username : displayName,
+                                        score : score.total } )
+                }
+            })
+        }
         //target_hit : [],
         
         let __idx = 0
@@ -899,7 +949,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             }
 
             // if ( sprite && position ){
-                
+            
             //     const sprdata = itemToSpriteData( World, id )
             //     sprdata.sprt = sprite.type
             //     //console.log('sprdata',sprdata)
@@ -911,7 +961,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             //     //     throw new Error('NO!')
 
             //     // const p = dparams.reduce( 
-                
+            
             //     // const dataKeys = Object.keys( sprdata )
             //     // for ( let i = 0 ; i < dataKeys.length ; i++ ){
             //     //     const k = dataKeys[ i ]
@@ -926,8 +976,8 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             //     }
             //     categ.sprites.push(  obj )
             //     //console.log(JSON.stringify( obj ) )
-                
-                
+            
+            
             // }
             
             if ( sprite && position ) {
@@ -1064,7 +1114,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                     })
                 }
             }
-                
+            
             
         })
         const commonUpdate = Object.assign(
@@ -1074,6 +1124,9 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 justfired : [],
             }
         )
+        if ( mkLeaderboard ){
+            commonUpdate.leaderboard = leaderboard
+        }
         Components.player.forEach( ([ playerId, player ]) => {
             const { name } = player
             //const mePlaneIdx = categ.planes.findIndex( ( plane ) => plane.name === name )
@@ -1092,15 +1145,35 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             if ( player.name === name ){                
                 return id
             }
-        }
+        }        
     }
-    function addPlayer( name, _, score ){
+    function addPlayer( name, _, totalScore ){
         const found = firstPlayerByName( name )
+        /*        Systems.team.forEach( ([teamId]) => {
+                  console.log('team',teamId)
+                  })*/
+        let teamId = undefined
+        {            
+            const smallest = { size : undefined, id : undefined }
+            Systems.team.forEach( (team,teamId) => {
+                const teamSize = Systems.team.getTeamMembers( teamId )
+                if ( ( smallest.size === undefined )
+                     || ( teamSize < smallest.size ) ){
+                    smallest.size = teamSize
+                    smallest.id = teamId
+                }
+            })
+            console.log( 'smallest team', smallest )
+            teamId = smallest.id
+        }
+        const isPlacer = found && Components.placement.has( found )
+        console.log({isPlacer})
+        
         if ( found !== undefined ){
             console.log('ALREADY EXISTS',name)
             return ADD_PLAYER_RETURNS.ALREADY_JOINED
         } else {
-            createAndPlacePlayer( name, score )
+            createAndPlacePlayer( { name, totalScore, teamId } )
             //createPlayer( name, score )
             // dbgItems()
             return ADD_PLAYER_RETURNS.OK

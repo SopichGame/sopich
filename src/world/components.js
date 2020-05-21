@@ -56,9 +56,24 @@ export function mkComponents(){
                 r
             } )
         }),
-        player :  cmpStrg( {
-            copy : ( { name, score, teamId } ) => ( {
-                name, score, teamId
+        member :  cmpStrg( {
+           copy : ( { teamId } ) => ( {
+                teamId
+            } )
+        }),
+        team : cmpStrg( {
+            copy : ( { name } ) => ( {
+                name
+            })
+        }),
+        player : cmpStrg( {
+            copy : ( { name } ) => ( {
+                name
+            } )
+        }),
+        score :  cmpStrg( {
+            copy : ( { total } ) => ( {
+                total
             } )
         }),
         actuator : cmpStrg( {
@@ -148,9 +163,9 @@ export function mkComponents(){
                 nobounce, die, noclamp
             })
         }),
-        team : cmpStrg( {
-            copy : ( { name } ) => ( {
-                
+        owned :  cmpStrg( {
+            copy : ( { ownerId } ) => ( {
+                ownerId
             })
         }),
         

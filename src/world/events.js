@@ -95,7 +95,7 @@ export function mkEvents( World ){
         fs.add( f )
     }
     function stepDeath(){
-        World.Systems.health.getDeathList().forEach( id => {
+        World.Systems.health.getDeathList().forEach( (killedBy,id) => {
             const fs = fsByDeadId.get( id )
             if ( fs === undefined )
                 return
@@ -105,6 +105,34 @@ export function mkEvents( World ){
             fsByDeadId.delete( id )
         })
     }
+    /* kills */
+    const fsByKillerId = new Map()
+    function getOrCreateKillsFs( id ){
+        let fs = fsByKillerId.get( id )
+        if ( ( fs === undefined ) ){// && ( World.Components.health.has( id ) ) ){
+            fs = new Set()
+        }
+        fsByKillerId.set( id, fs )
+        return fs
+    }
+    function onKill( id, f ){
+        const fs = getOrCreateKillsFs( id )
+        if ( fs === undefined )
+            return
+        fs.add( f )
+    }
+    function stepKills(){
+        World.Systems.health.getKillList().forEach( ( killed, id ) => {
+            const fs = fsByKillerId.get( id )
+            if ( fs === undefined )
+                return
+            // execute callbacks
+            fs.forEach( f => f(World, id, killed ) )
+        })
+    }
+ 
+    
+
     
     /* collisions */
     const fsByCollideId = new Map()
@@ -140,6 +168,7 @@ export function mkEvents( World ){
     function step(){
         stepTimeout()
         stepCollide()
+        stepKills()
         stepDeath()
     }
     /* */
@@ -147,6 +176,7 @@ export function mkEvents( World ){
         onTimeoutId, wait, repeat, pulse,
         onDeath,
         onCollide,
+        onKill,
         step,
         
     }

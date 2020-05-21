@@ -178,9 +178,103 @@ export function mkSystems( W ){
         })(),
         ( () => {
             const { Components, Items } = W
-            const playersByTeam = new Map()
+            const byTeam = new Map()
+            // const membersByTeam = new Map()
+            // const teamByMember = new Map()
+            //
+            // { member : { teamId } }
+            // { team : { name, score } }
+            //
+            // function affectToTeam( id, teamId ){
+            //     let member = Components.member.get( id )
+            //     if ( member !== undefined ){
+            //         member.teamId = teamId
+            //     }
+            // }
+            // function addTeam( id ){
+            //     if ( !membersByTeam.has( id ) ){
+            //         membersByTeam.set( id, new Set() )
+            //     }
+            // }
+            // function addMember( id ){
+            //     const member = Components.member.get( id ) 
+            //     if ( member !== undefined ) {
+            //         const members = membersByTeam.get( member.teamId )
+            //         if ( members !== undefined ){
+            //             members.add( id )
+            //             teamByMember.set( id, member.teamId )
+            //         }
+            //     }
+            // }
+            // function removeTeam( id ){
+            //     const members = membersByTeam.get( id )
+            //     if ( members !== undefined ) {
+            //         members.forEach( ( [ memberId ] ) => {
+            //             affectToTeam( memberId, undefined )
+            //         })
+            //         membersByTeam.delete( id )
+            //     }
+            // }
+            // function removeMember( id ){
+            //     const member = Components.member.get( id ) 
+            //     if ( member !== undefined ) {
+            //         member.delete( id )
+            //     }
+            // }
             return {
                 name : 'team',
+                onStep : () => {
+                    byTeam.clear()
+                    Components.team.forEach( ([ id ]) => {
+                        byTeam.set( id, new Set() )
+                    })
+                    Components.member.forEach( ([ id, member ]) => {
+                        const { teamId } = member
+                        if ( teamId === undefined ) return                       
+                        const members = byTeam.get( teamId )
+                        if ( members === undefined ) return
+                        members.add( id )
+                    })
+                },
+                getTeamMembers : byTeam.get.bind( byTeam ),
+                forEach : byTeam.forEach.bind( byTeam )
+                // onAdded : id => {
+                //     if ( Components.team.has( id ) ){
+                //         addTeam( id )
+                //     }
+                //     const member = Components.member.get( id )
+                //     if ( member !== undefined ){
+                //         const { teamId } = member
+                //         addMember( id, teamId )
+                //     }
+                // },
+                // onRemoved : id => {
+                //     if ( Components.team.has( id ) ){
+                //         removeTeam( id )
+                //     }
+                //     if ( Components.member.has( id ) ){
+                //         removeMember( id )
+                //     }
+                // },
+                // onComponentChange : id => {
+                //     if ( Components.team.has( id ) ){
+                //         if ( !membersByTeam.has( id ) ){
+                //             addTeam( id )
+                //         }
+                //     } else {
+                //         if ( membersByTeam.has( id ) ){
+                //             removeTeam( id )
+                //         }
+                //     }
+                //     if ( Components.member.has( id ) ){
+                //         const { teamId } = Components.member.get( id )
+                //         if ( teamId !== undefined ){
+                //         }
+                //     } else {
+                        
+                //     }
+                    
+                // }
             }
         })(),
         
@@ -214,7 +308,7 @@ export function mkSystems( W ){
             const { Components } = W,
                   countById = new Map()
             return {
-                name : 'placer', // TODO placement + position
+                name : 'placer', 
                 onStep : () => {
                     W.Components.placement.forEach( ([id]) => {
 
@@ -407,9 +501,20 @@ export function mkSystems( W ){
                             if ( color ){
                                 inheritFromLauncher.color = color
                             }
+                            const owned = Components.owned.get( targetId )
+                            if ( owned ){
+                                inheritFromLauncher.owned = owned
+                            } else {
+                                inheritFromLauncher.owned = { ownerId : targetId }
+                            }
                             const dropped = W.Items.create(
-                                Object.assign( {}, model.model, inheritFromLauncher )
+                                Object.assign(
+                                    { owned : { ownerId : targetId } },
+                                    model.model,
+                                    inheritFromLauncher
+                                )
                             )
+                            console.log({dropped},Components.owned.get( dropped ))
                             const droppedSpeed = W.Components.speed.get( dropped )
                             if ( speed && droppedSpeed ){
                                 if ( droppedSpeed.pps === undefined ){
@@ -799,7 +904,7 @@ export function mkSystems( W ){
                 if ( attack2 ){
                     const collisionAttack =  attack2.collision
                     if ( collisionAttack ){
-                        W.Systems.health.inflictDamage( id1, collisionAttack /*{ quality : 0, quantity : 1 } */)
+                        W.Systems.health.inflictDamage( id1, collisionAttack, id2 /*{ quality : 0, quantity : 1 } */)
                     }
                 }
                 const placement = W.Components.placement.get( id1 )
@@ -912,8 +1017,9 @@ export function mkSystems( W ){
         })(),
         ( () => {
             const damage = new Map()
-            const death = new Set()
+            const death = new Map()
             const tookdamage = new Set()
+            const kills = new Map()
             function didTakeDamage( id ){
                 return tookdamage.has( id )
             }
@@ -930,6 +1036,9 @@ export function mkSystems( W ){
             function getDeathList(){
                 return death
             }
+            function getKillList(){
+                return kills
+            }
             function getOrCreateDamages( id ){
                 if ( Components.health.has( id ) ){
                     let d = damage.get( id )
@@ -940,7 +1049,7 @@ export function mkSystems( W ){
                     return d
                 }
             }
-            function inflictDamage( id, damage ){
+            function inflictDamage( id, damage, by ){
                 const health = Components.health.get( id )
                 if ( health === undefined )
                     return
@@ -950,7 +1059,7 @@ export function mkSystems( W ){
 
                 const d = getOrCreateDamages( id )
                 if ( d === undefined ) return
-                d.push( damage )
+                d.push( { damage, by } )
                 return true
             }
             function _isAlive( health ){
@@ -966,14 +1075,13 @@ export function mkSystems( W ){
                 return  _age( health ) < health.tytd
             }
             function _applyDamage( health, damage ){
-                //const { quantity } = damage
-
                 const quantity  = damage
                 health.life -= quantity
             }
             function onStep( ){
                 death.clear()
                 tookdamage.clear()
+                kills.clear()
                 damage.forEach( ( list, id ) => {
                     const health = Components.health.get( id )
                     //console.log('-',id,health,list)
@@ -981,11 +1089,26 @@ export function mkSystems( W ){
                     // if ( health === undefined ){ damage.delete( id ) }
                     const damagers = []
                     while ( list.length ){
-                        _applyDamage( health, list.shift() )
+                        const { damage, by } = list.shift()
+                        _applyDamage( health, damage )                        
+                        const byOwner = Components.owned.get( by )
+                        if ( byOwner !== undefined ){
+                            damagers.push( byOwner.ownerId )
+                        } else {
+                            damagers.push( by )
+                        }
                     }
                     const aliveAfter = _isAlive( health )
                     if ( aliveBefore && (!aliveAfter ) ){
-                        death.add( id )
+                        death.set( id, damagers )
+                        damagers.forEach( damagerId => {
+                            let damagerKills = kills.get( damagerId )
+                            if ( damagerKills === undefined ){
+                                damagerKills = new Set()
+                                kills.set( damagerId, damagerKills )
+                            }
+                            damagerKills.add( id )
+                        })
                     }
                     tookdamage.add( id )
                 })
@@ -997,7 +1120,8 @@ export function mkSystems( W ){
                 inflictDamage,
                 isAlive,
                 justDied,
-                getDeathList,
+                getDeathList, // killers by dead id 
+                getKillList,  // deaths by killer id
                 didTakeDamage,
             }
         })(),

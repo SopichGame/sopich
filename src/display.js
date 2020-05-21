@@ -53,7 +53,7 @@ function LeaderBoardDisplay(){
         $div.style.visibility = 'visible'
     }
     function update( leaderboard ){
-
+        
         let width1 = clamp(leaderboard.reduce(
             (r,{username}) => Math.max( r, username.length ),
             0
@@ -480,7 +480,7 @@ export function Display() {
             
             
         }
-
+        
         // stars
         stars.display( $context, world_to_context )
 
@@ -609,7 +609,7 @@ export function Display() {
                         }
                     }
                     
-                    if ( plane.lf < 0 ){
+                    if ( plane.lf <= 0 ){
                         trailPoints.add( x, y,  TrailColors.falling, 3, 2 )
                     }
                     if ( plane.dmg ){
