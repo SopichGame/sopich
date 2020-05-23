@@ -612,7 +612,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         )
         
         // missile launchers
-        for ( let i = 0 ; i < 3 ; i++){
+        for ( let i = 0 ; i < 1 ; i++){
             const launcherId = Items.create( {
                 launcher : { modelId : Models.missile },
                 removeWith : { ids:[id1] },
@@ -626,7 +626,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 owned : { ownerId : id1 },
             })
             const fireMissileTimedActuator = createDesignatedTimedActuator(
-                launcherId, 10, name, ['firemissile']
+                launcherId, 8, name, ['firemissile']
             )
         }
         
