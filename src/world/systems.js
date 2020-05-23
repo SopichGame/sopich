@@ -177,6 +177,36 @@ export function mkSystems( W ){
             }
         })(),
         ( () => {
+            const { Components } = W
+            function credit( id, points ){
+                const score = Components.score.get( id )
+                if ( score !== undefined ){
+                    if ( score.total === undefined )
+                        score.total = 0
+                    score.total += points
+                }                
+                const member = Components.member.get( id )
+                if ( member !==  undefined ){
+                    const teamId = member.teamId
+                    if ( teamId !== undefined ){
+                        const teamScore = Components.score.get( teamId )
+                        if ( teamScore !== undefined ){
+                            if ( teamScore.total === undefined )
+                                teamScore.total = 0
+                            teamScore.total += points
+                        }
+                    }
+                }
+            }
+            return {
+                name : 'score',
+                /*onStep,
+                  isOn,
+                  reset,*/
+                credit
+            }
+        })(),
+          ( () => {
             const { Components, Items } = W
             const byTeam = new Map()
             // const membersByTeam = new Map()
@@ -514,7 +544,7 @@ export function mkSystems( W ){
                                     inheritFromLauncher
                                 )
                             )
-                            console.log({dropped},Components.owned.get( dropped ))
+                            // console.log({dropped},Components.owned.get( dropped ))
                             const droppedSpeed = W.Components.speed.get( dropped )
                             if ( speed && droppedSpeed ){
                                 if ( droppedSpeed.pps === undefined ){

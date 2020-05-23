@@ -240,7 +240,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 attack : { collision : 5 },
                 direction : {}, // copy
                 position : {}, // copy
-                speed : { pps : undefined, min : 11, max : 12 }, // copy  pps : pps, max : 10, min : 0 },
+                speed : { pps : undefined, min : 14, max : 14 }, // copy  pps : pps, max : 10, min : 0 },
                 worldbounds : { die : true },
                 health : { life  : 1, maxLife : 1 },
                 color : {} // copy
@@ -586,8 +586,8 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             member : { teamId },
             position : { x : 200 + Math.random() * 800, y : 200 },
             direction : { a16 : 0 },
-            propulsor : { power : 8, min : 0, max : 10 },
-            speed : { pps : 0, max : 10, min : 0 },
+            propulsor : { power : 10, min : 0, max : 10 },
+            speed : { pps : 0, max : 10, min : 5 },
             sprite : { type : SpriteTypeNum['plane'] },
             r : { r : 0 },
             bb : {  },
@@ -698,7 +698,13 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             }
         })
         Events.onKill( id1, ( World, _, killed ) => {
-            // console.log('id',id1,'kills', killed )
+            const player1 = Components.player.get( id1 )
+            killed.forEach( (_,id ) => {
+                const player2 = Components.player.get( id )
+                if ( player1 && player2 ){
+                    Systems.score.credit( id1, 1 )
+                }
+            })
         })
         Events.onDeath( id1, ( World, id ) => {
             // console.log('* player is dead')
