@@ -597,7 +597,7 @@ export function Display() {
                           wxy = world_to_context( x, y )
                     
                     const isCameraTarget = ( cameraTarget && ( cameraTarget.id === plane.id ) )
-                    if ( showPositionHelper ){
+                    if ( showPositionHelper &&  isCameraTarget ){
                         const r = positionHelperShowRatio
                         if ( r > 0.5 ){
                             $context.beginPath()
