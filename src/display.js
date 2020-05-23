@@ -637,8 +637,8 @@ export function Display() {
                     }
                     
                     $context.beginPath()
-                    let col = ColorSchemes[cs][0]
-                    let rgb = ( human === true )?`rgb(${col[0]},${col[1]},${col[2]})`:'gray'
+                    let col = ColorSchemes[cs][1]
+                    let rgb = /*( human === true )?*/ `rgb(${col[0]},${col[1]},${col[2]})`/*:'gray'*/
                     $context.fillStyle = rgb
                     
                     
@@ -648,7 +648,10 @@ export function Display() {
                           && ( wxy.y >= 0 ) && ( wxy.y <= $canvas.height )
                     
                     //                    const displayString = `${ name } ${ score.total } ${ value }`// ${ human?'human':'💻' } ${ inScreen?'yes':'no'}`
-                    const displayString = `${ name }`// ${ human?'human':'💻' } ${ inScreen?'yes':'no'}`
+                    const displayString = plane.teamName
+                        ?(`[${ plane.teamName.slice(0,1) }]${ name }`  )
+                        :(`${ name }`)
+                    // ${ human?'human':'💻' } ${ inScreen?'yes':'no'}`
 
                     if ( true || inScreen || (human === true) ){
                         

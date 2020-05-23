@@ -388,7 +388,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
     // }
     function createTeam( name, total ){
         return Items.create({
-            team : { name },
+            team : { name },            
             score : { total }
         })
     }
@@ -940,8 +940,25 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                   color = Components.color.get( id ),
                   placement = Components.placement.get( id ),
                   health = Components.health.get( id ),
-                  didTakeDamage = Systems.health.didTakeDamage( id )
+                  didTakeDamage = Systems.health.didTakeDamage( id ),
+                  member = Components.member.get( id )
 
+            let teamName = undefined,
+                teamColorScheme = undefined
+
+            if ( member ) {
+                const { teamId } = member
+                if ( teamId !== undefined ){
+                    const team = Components.team.get( teamId )
+                    if ( team ){
+                        teamName = team.name
+                    }
+                    const color = Components.color.get( teamId )
+                    if ( color ){
+                        teamColorScheme = color.cs
+                    }
+                }
+            }
             
             if ( placement !== undefined ){
                 categ.placers.push({
@@ -1073,6 +1090,8 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                     categ.planes.push({
                         id,
                         name : player.name,
+                        teamName,
+                        teamColorScheme,
                         x : position.x,
                         y : position.y,
                         ...symbFilterProps('dparams',{
