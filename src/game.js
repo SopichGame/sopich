@@ -131,7 +131,10 @@ export function Game( { tellPlayer, // called with user centered world, each wor
     const World = mkWorld()
     const { Components, Systems, Items, Events } = World
     const seed = "braoume"
-    
+    const Options = {
+        showTeamScore : true,
+        showPlayerScore : true,        
+    }
     function EventsWatchUntil( condition, f, interval = 1 ){
         const timeoutId = Events.pulse( interval, watchF )
         function watchF(){
@@ -702,7 +705,21 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             killed.forEach( (_,id ) => {
                 const player2 = Components.player.get( id )
                 if ( player1 && player2 ){
-                    Systems.score.credit( id1, 1 )
+                    const member1 = Components.member.get( id1 )
+                    const member2 = Components.member.get( id )
+                    let credit = 0
+                    if ( member1 && member2 ){
+                        const teamId1 = member1.teamId
+                        const teamId2 = member2.teamId
+                        if ( teamId1 === teamId2 ){
+                            credit = -2
+                        } else {
+                            credit = 1
+                        }
+                        Systems.score.credit( id1, credit )
+                    } else {
+                        Systems.score.credit( id1, 1 )
+                    }
                 }
             })
         })
@@ -877,7 +894,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
 
             Components.score.forEach( ([id,score]) => {
                 const player = Components.player.get( id )
-                if ( player ){
+                if ( ( player !== undefined ) && Options.showPlayerScore ){
                     let displayName = player.name
                     const member = Components.member.get( id )
                     if ( member ){
@@ -893,9 +910,10 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                                         score : score.total } )
                 }
                 const team  = Components.team.get( id )
-                if ( team !== undefined ){
+                if (( team !== undefined ) && Options.showTeamScore ){
                     const displayName = `${ team.name }`
                     leaderboard.push( { username : displayName,
+                                        isTeam : true,
                                         score : score.total } )
                 }
             })
