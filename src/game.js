@@ -1308,7 +1308,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             console.log('ALREADY EXISTS',name)
             return ADD_PLAYER_RETURNS.ALREADY_JOINED
         } else {
-            createAndPlacePlayer( { name, totalScore, teamId } )
+            createAndPlacePlayer( { name, totalScore : 0, teamId } )
             //createPlayer( name, score )
             // dbgItems()
             return ADD_PLAYER_RETURNS.OK
