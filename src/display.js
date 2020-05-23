@@ -30,7 +30,7 @@ function LeaderBoardDisplay(){
     
     function $buildContainer(){
         let $div = document.createElement('pre') 
-        $div.style = 'position:fixed;display:block;color:white;z-index:25;'
+        $div.style = 'font-size:10px;position:fixed;display:block;color:white;z-index:25;'
             +'width:auto;height:auto;'
             +'right:0px;top:0px;'
             +'opacity:0.9'
@@ -610,7 +610,7 @@ export function Display() {
                     }
                     
                     if ( plane.lf <= 0 ){
-                        trailPoints.add( x, y,  TrailColors.falling, 3, 2 )
+                        trailPoints.add( x, y,  TrailColors.falling1, 3, 2 )
                     }
                     if ( plane.dmg ){
                         trailPoints.add( x, y,  TrailColors.debris, 4, 2 )
