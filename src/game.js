@@ -512,14 +512,14 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         }
         Events.onCollide( basket, (_, __, withId ) => {
             if ( Components.heightmap.has( withId ) ){
-                console.log('* basket collides with ground')
+                // console.log('* basket collides with ground')
                 // collide with ground
                 groundBasket()
             }
         })
         Events.onDeath( basket, ( W, id ) => {
             const speed = Components.speed.get( id )
-            console.log('* basket is dead')
+            // console.log('* basket is dead')
             if ( speed ){
                 // is not crashed
                 freeFlyBasket()
@@ -527,7 +527,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             killBasketAndRespawn()
         })
         Events.onDeath( balloon, ( W, id ) => {
-            console.log('* balloon is dead')
+            // console.log('* balloon is dead')
             killBalloon( id )
             const speed = Components.speed.get( basket ) 
             if ( speed ){
@@ -557,7 +557,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             return
         
         createPlacer( worldSize, 1, ( freePosition ) => {
-            console.log('occupation', freePosition, 'isAvailable' )
+            // console.log('occupation', freePosition, 'isAvailable' )
             const id = createPlayer( { name, totalScore, colorScheme, teamId } )
             const position = Components.position.get( id )
             if ( position ){
@@ -659,7 +659,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             const member = Components.member.get( id )
             const score = Components.score.get( id )
             const color = Components.color.get( id )
-            console.log('dead',{ player, member, color })
+            // console.log('dead',{ player, member, color })
             Events.onTimeoutId( toId, W => {
                 Items.remove( id )
                 createAndPlacePlayer( { name : player.name,
@@ -698,10 +698,10 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             }
         })
         Events.onKill( id1, ( World, _, killed ) => {
-            console.log('id',id1,'kills', killed )
+            // console.log('id',id1,'kills', killed )
         })
         Events.onDeath( id1, ( World, id ) => {
-            console.log('* player is dead')
+            // console.log('* player is dead')
 
             if ( crashed ) {
                 // dead after a crash
@@ -819,7 +819,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         }
 
         function handleDeath( id ){
-            console.log( 'handleDeath',id)
+            // console.log( 'handleDeath',id)
             const Components = World.Components
             if (  Components.heightmap.has( id ) ){
             } else {
@@ -1156,7 +1156,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         {            
             const smallest = { size : undefined, id : undefined }
             Systems.team.forEach( (team,teamId) => {
-                const teamSize = Systems.team.getTeamMembers( teamId )
+                const teamSize = Systems.team.getTeamMembers( teamId ).size
                 if ( ( smallest.size === undefined )
                      || ( teamSize < smallest.size ) ){
                     smallest.size = teamSize
