@@ -128,13 +128,62 @@ export const ATTACK_TYPE = {
 export function Game( { tellPlayer, // called with user centered world, each world update 
                         tellScore,  // called with player score, when quitting
                       } ) {
+
+    
     const World = mkWorld()
     const { Components, Systems, Items, Events } = World
     const seed = "braoume"
     const Options = {
         showTeamScore : true,
-        showPlayerScore : true,        
+        showPlayerScore : true,
+        stayOnGameOver : 70,
+        maxTeamScore : 20
     }
+    const GameState = {
+        state : 'playing',
+        waitTo : undefined
+    }
+    const gameState = {}
+    gameState.send = ( message ) => {
+        const isn = GameState.state
+        //console.log('from',GameState)
+        switch ( GameState.state ){
+        case 'playing' : {
+            switch ( message ){
+            case 'max-score-reached' : {
+                GameState.state = 'over'
+                GameState.waitTo = Options.stayOnGameOver
+                break
+            }
+            }
+            break
+        }
+        case 'over' : {
+            switch ( message ){
+            case 'replay' : {
+                GameState.waitTo--
+                if ( GameState.waitTo <= 0 ){
+                    GameState.state = 'reset'
+                }
+                break
+            }
+            }
+            break
+        }
+        case 'reset' : {
+            switch ( message ){
+            case 'replay' : {
+                GameState.state = 'playing'
+            }
+            }
+            break
+        }
+        }
+        if ( GameState.state !== isn ){
+            console.log('from',isn,'to',GameState)
+        }
+    }
+
     function EventsWatchUntil( condition, f, interval = 1 ){
         const timeoutId = Events.pulse( interval, watchF )
         function watchF(){
@@ -828,43 +877,84 @@ export function Game( { tellPlayer, // called with user centered world, each wor
 
     
     function update(){
+        if ( GameState.state === 'over' ){
+            gameState.send('replay')
+        } else if ( GameState.state === 'reset' ){
+            const { Systems, Components, Items } = World
+            const playerInfos = []
+            Components.player.forEach( ([id,player]) => {
+                const member = Components.member.get( id )
+                // const color = Components.color.get( id )
+                playerInfos.push( { player, member /*, color */ } )
+                Items.remove( id )
+                console.log('-player', id, { player, member /*, color */ } )
+            })
+            
+            playerInfos.forEach( ({ player, member, color }) => {
+                const { name } = player
+                const { teamId } = member
+                //const { cs } = color
+                createAndPlacePlayer( { name, teamId, /* colorScheme : cs,*/ totalScore : 0, } )
+                console.log('+player', { player, member, color } )
+            })
+            
+            Systems.team.forEach( ( team, id ) => {
+                const score = Components.score.get( id )
+                if ( score ){
+                    score.total = 0
+                    console.log('reset score')
+                }
+                console.log('-team', id, { team }, Components.score.get( id ) )
+            })
 
-        let version = World.getVersion()
+            
+            gameState.send('replay')
+        } else if ( GameState.state === 'playing' ){
+            let version = World.getVersion()
 
-        const timers = {}        
-        timers.step = { start : Date.now() }
-        World.step( )
-        timers.step.end = Date.now()
-        
-        const took_ms = timers.step.end - timers.step.start 
-        if ( took_ms > 20 ){
-            console.log('version',version + 1,'took', took_ms,'ms', 'max steps per seconds:', 1000 /  took_ms )
-        }
+            const timers = {}        
+            timers.step = { start : Date.now() }
+            World.step( )
+            timers.step.end = Date.now()
+            
+            const took_ms = timers.step.end - timers.step.start 
+            if ( took_ms > 20 ){
+                console.log('version',version + 1,'took', took_ms,'ms', 'max steps per seconds:', 1000 /  took_ms )
+            }
 
-        function handleDeath( id ){
-            // console.log( 'handleDeath',id)
-            const Components = World.Components
-            if (  Components.heightmap.has( id ) ){
-            } else {
-                const sprite = Components.sprite.get( id )
-                if ( sprite ){
-                    if (( sprite.type === SpriteTypeNum['missile'] )
-                        || ( sprite.type === SpriteTypeNum['bomb'] ) )
-                        Items.remove( id )
+            function handleDeath( id ){
+                // console.log( 'handleDeath',id)
+                const Components = World.Components
+                if (  Components.heightmap.has( id ) ){
+                } else {
+                    const sprite = Components.sprite.get( id )
+                    if ( sprite ){
+                        if (( sprite.type === SpriteTypeNum['missile'] )
+                            || ( sprite.type === SpriteTypeNum['bomb'] ) )
+                            Items.remove( id )
+                    }
                 }
             }
+            //
+            World.Systems.collision.getCollidingPairs().forEach( ({ id1, id2 }) => {           
+            })        
+            World.Systems.health.getDeathList().forEach( (_,id) => {
+                handleDeath( id )
+            })
+            
+            World.Components.score.forEach( ([scoreId,score]) => {
+                const { total } = score
+                if ( total >= Options.maxTeamScore ){
+                    gameState.send('max-score-reached')
+                }
+            })
         }
-        //
-        World.Systems.collision.getCollidingPairs().forEach( ({ id1, id2 }) => {            
-        })        
-        World.Systems.health.getDeathList().forEach( (_,id) => {
-            handleDeath( id )
-        })
-
         //dbgItems()
         
         sendUpdate()
     }
+    const leaderBoardInterval = 10
+    let leaderBoardTo = 0
     function sendUpdate(){
         const categ = {
             placers : [],
@@ -888,7 +978,8 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         if ( !DEBUG_COLLISIONS ){
             delete categ._lastcolls
         }
-        const mkLeaderboard = ( World.getVersion() % 10 ) === 0 
+
+        const mkLeaderboard = ( (leaderBoardTo++) % leaderBoardInterval ) === 0 
         const leaderboard = []
         if ( mkLeaderboard ){
 
@@ -1165,6 +1256,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 t : Date.now(),
                 version : World.getVersion(),
                 justfired : [],
+                s : GameState.state,
             }
         )
         if ( mkLeaderboard ){

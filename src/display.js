@@ -11,11 +11,11 @@ const DEBUG_PLAYER_ID = true
 const POSITION_HELPER_DURATION = 3500
 
 function getRandomColor() {
-    if (Math.random()>0.5){
+    /*if (Math.random()>0.5){
         return 'black'
     } else {
         return 'white'
-    }
+    }*/
     
     var letters = '0123456789ABCDEF';
     var color = '#';
@@ -356,8 +356,6 @@ export function Display() {
 
     const stars = Stars()
     const trailPoints = TrailPoints()
-
-    
     
     const $canvas = document.createElement('canvas')
     $canvas.classList.add('game')
@@ -394,7 +392,7 @@ export function Display() {
         if ( !State ) {
             return
         }
-        
+
         const leaderboard = State.leaderboard
         if ( leaderboard ){
             leaderboardDisplay.update( leaderboard ) 
@@ -813,6 +811,29 @@ export function Display() {
                 
             })
         }
+
+        //
+        const state = State.s
+        const gameover = ( state === 'over' )
+        if ( gameover ){
+            
+            $context.beginPath()
+            $context.fillStyle = 'rgba(0,0,0,0.6)'
+            $context.fillRect(0,0,
+                              $canvas.width,
+                              $canvas.height)
+            
+            $context.beginPath()
+            $context.font = '15px mono'
+            $context.fillStyle = 'green'
+            $context.fillText('GAME OVER',
+                              $canvas.width/2,
+                              $canvas.height/2)
+
+        } else {
+        }
+
+        
     }
     function animate(){
         requestAnimationFrame( animate )
