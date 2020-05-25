@@ -1,6 +1,6 @@
 import { connect, play, sendKeyboardMappingToServer, sendAddEntityToServer } from './networking';
 import { startRendering, stopRendering } from './render';
-import { startCapturingInput, stopCapturingInput } from './input';
+//import { startCapturingInput, stopCapturingInput } from './input';
 import { initState } from './state';
 import './css/main.css';
 import  * as Menu from '../../menu.js'
@@ -13,9 +13,23 @@ const notJoinedReason = document.getElementById('not-joined-reason');
 const menu = new Menu.Menu( Menu.Definitions, Menu.defaultStore )
 
 import { remapControlsButton, remapControlsButtonClicked, keyboardMappingLoaded } from './remapcontrols.js'
+// import { Lobby } from './lobby.js'
+// console.log( {Lobby})
+// document.body.appendChild( Lobby().$container )
 /*
  * index
- */ 
+ */
+
+import { sendInputToServer } from './networking';
+import { Controller } from '../../../src/controller.js'
+
+function onInput( input ){
+    sendInputToServer( input )
+}
+const controller = new Controller( sendInputToServer )
+
+
+
 Promise.all([
     connect( onGameOver, onGameStarting, onGameNotStarting, onYourInfo ),
     //  downloadAssets(),
@@ -59,8 +73,8 @@ function onGameStarting(){
     playMenu.classList.add('hidden');
     document.body.classList.add('no-overflow')
     menu.start()
-    initState();
-    startCapturingInput();
+    initState()
+    controller.connect()
     startRendering();
     
 }
@@ -72,7 +86,7 @@ function onGameNotStarting( cause ){
 
 function onGameOver() {
     menu.stop()
-    stopCapturingInput();
+    controller.disconnect()
     stopRendering();
     playMenu.classList.remove('hidden');
     //  setLeaderboardHidden(true);

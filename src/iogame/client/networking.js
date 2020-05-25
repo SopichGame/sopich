@@ -8,7 +8,7 @@ import * as Messages from '../shared/messages.js'
 
 const Constants = require('../shared/constants');
 
-const gameName = 'monsocketserver1'
+const gameName = 'monsocketserver12'
 
 function createOrReuseSocket( gameName ){
     const socketUrl = new URL( gameName, window.location )

@@ -293,7 +293,7 @@ function createSopichWebSocketGame( name ){
         })
     })
 }
-createSopichWebSocketGame('monsocketserver1')
+createSopichWebSocketGame('monsocketserver12')
 
 
 // function NON(){
