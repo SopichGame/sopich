@@ -4,7 +4,7 @@ module.exports = Object.freeze({
         // client -> server
         JOIN_GAME: 'join_game',
         INPUT: 'input',
-        KEYBOARD_MAPPING : 'keyboard_mapping',
+        // KEYBOARD_MAPPING : 'keyboard_mapping',
         ADD_ENTITY : 'add_entity',
         // server -> client
         YOUR_INFO : 'your_info',

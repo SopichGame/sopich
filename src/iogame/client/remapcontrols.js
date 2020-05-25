@@ -26,11 +26,11 @@ function updateMappedKeySpan( type, KeyboardMapping ){
     mappedKeysSpan.innerHTML = KeyboardMapping[ type ].join(' ')
     
 }
-function onMappingUpdated(){
+/*function onMappingUpdated(){
     // updated in client    
     // send to server
     sendKeyboardMappingToServer( KeyboardMapping )
-}
+}*/
 export function keyboardMappingLoaded( keyboardMapping ){
     console.log('loaded KeyboardMapping',keyboardMapping)
     Object.keys( KeyboardMapping ).forEach( type => {
@@ -41,8 +41,7 @@ export function keyboardMappingLoaded( keyboardMapping ){
         }
     })
 }
-export function remapControlsButtonClicked(){  
-    console.log('oo')
+export function remapControlsButtonClicked( onMappingUpdated ){  
     remapControlsList.classList.toggle('hidden')
     
     remapControlsResetButton.onclick = () => {
@@ -50,7 +49,7 @@ export function remapControlsButtonClicked(){
         Object.keys( KeyboardMapping ).forEach( type => {
             updateMappedKeySpan( type, KeyboardMapping )
         })
-        onMappingUpdated()
+        onMappingUpdated(KeyboardMapping)
     }
     
     Object.keys( KeyboardMapping ).forEach( type => {
@@ -73,7 +72,7 @@ export function remapControlsButtonClicked(){
                 setOneKeyboardMapping( KeyboardMapping, type, code )
                 updateMappedKeySpan( type, KeyboardMapping )
                 remapButton.classList.remove('active-remapping')
-                onMappingUpdated()
+                onMappingUpdated(KeyboardMapping )
             })
             
         }

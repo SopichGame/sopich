@@ -617,7 +617,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 position.y = freePosition.y
             }
         }, {
-            bb : { w : 128, h : 128 },
+            bb : { w : 256, h : 256 },
             player : { name },
             member : { teamId },
         })
@@ -713,11 +713,13 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             const color = Components.color.get( id )
             // console.log('dead',{ player, member, color })
             Events.onTimeoutId( toId, W => {
-                Items.remove( id )
-                createAndPlacePlayer( { name : player.name,
-                                        totalScore : score.total,
-                                        teamId : member.teamId
-                                      })
+                if ( Components.player.has( id ) ){
+                    Items.remove( id )
+                    createAndPlacePlayer( { name : player.name,
+                                            totalScore : score.total,
+                                            teamId : member.teamId
+                                          })
+                }
             })
             
         }
@@ -1336,6 +1338,13 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         */
     }
     function getPlayers(){
+        const names = []
+        Components.player.forEach( ([id,player]) => {
+            if ( player.name ){
+                names.push( player.name )
+            }
+        })
+        return names
     }    
     function handleInput( name, input ){
         // console.log( '[game][input]', Date(), name, JSON.stringify( input ))
@@ -1354,9 +1363,9 @@ export function Game( { tellPlayer, // called with user centered world, each wor
     return {
         addPlayer,
         removePlayer,
-        getPlayers,
         handleInput,
         handleAddEntity,
+        getPlayers,
     }
 }
 /// pb is : controllers applys to layncher directio

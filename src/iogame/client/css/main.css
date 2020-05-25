@@ -1,6 +1,7 @@
 html, body {
   background-color: black;
   background-color : darkgrey;
+  margin : 0;
 }
 .no-overflow {
     margin: 0;
@@ -78,6 +79,7 @@ canvas {
   left: 50%;
   transform: translateY(-50%) translateX(-50%);
 */
+    margin : 1em;
   padding: 20px 30px;
   background-color: white;
   display: flex;

@@ -38,6 +38,7 @@ app.use( cookieParser() )
  */
 const bodyParser = require('body-parser')
 app.use( bodyParser.urlencoded({ extended: true } ) )
+app.use( bodyParser.json() )
 
 /*
  * Session
@@ -154,11 +155,49 @@ const gamesManager = GamesManager()
 function gameDebugMessage( ...p ){
     console.log('[sopich server/game]',...p)
 }
+app.post('/keyboardmapping', [
+    async ( req, res) => {
+        const psd = bodyParser.json( req )
+        const username = req.user.username
+        const keyboardMapping = req.body
+        gameDebugMessage( username, 'maps keys', keyboardMapping )
+        const rez = await User.updateKeyboardMapping(
+            username, keyboardMapping
+        )
+        console.log({username, keyboardMapping})
+        res.send()
+    }
+])
+app.get('/me',  [
+    async ( req, res) => {
+        const username = req.user.username
+        const user = await User.findOne( { username } )
+        const yourinfo = {
+            username,
+            score : user.score,
+            keyboardMapping : user.keyboardMapping,
+        }
+        res.json( yourinfo )
+    }])
+app.get('/games',  [
+    ( req, res) => {
+        const list = []
+        gamesManager.forEach( ( game, name ) => {
+            const players = game.getPlayers()
+            list.push( { name, players } )
+        })
+        res.json(list)
+    }])
+
+
 const Messages = require('../shared/messages.js')
 
 
 function createSopichWebSocketGame( name ){
 
+    if ( gamesManager.isFull() ){
+        return undefined
+    }
     
     // cp to client
     function deserializeMessage( data ){
@@ -189,9 +228,6 @@ function createSopichWebSocketGame( name ){
         }
     }
 
-    if ( gamesManager.isFull() ){
-        return undefined
-    }
     
     const socketByUsername = new Map()
     
@@ -224,8 +260,9 @@ function createSopichWebSocketGame( name ){
         socketByUsername.set( username, ws )
 
         // send user infos
-        const user = await User.findOne( { username } )
-        if ( user ){
+        
+          const user = await User.findOne( { username } )
+        /*if ( user ){
             const yourInfo = {
                 username,
                 score : user.score,
@@ -233,7 +270,7 @@ function createSopichWebSocketGame( name ){
             }
             send( ws, Constants.MSG_TYPES.YOUR_INFO, yourInfo )
         }
-        
+        */
         
         function onUserSendsJoin(){
             const error = game.addPlayer( username, username,  user.score )
@@ -247,13 +284,13 @@ function createSopichWebSocketGame( name ){
         }        
         function onUserSendsInput( input ){
             game.handleInput( username, input )
-        }
+        }/*
         async function onUserSendsKeyboardMapping( keyboardMapping ){
             gameDebugMessage( username, 'maps keys', keyboardMapping )
             const rez = await User.updateKeyboardMapping(
                 username, keyboardMapping
             )
-        }
+        }*/
         function onUserAddsEntity( e ){
             game.handleAddEntity( e )
         }
@@ -263,9 +300,9 @@ function createSopichWebSocketGame( name ){
             let f = undefined
 
             switch ( type ){
-            case Constants.MSG_TYPES.KEYBOARD_MAPPING :
+            /*case Constants.MSG_TYPES.KEYBOARD_MAPPING :
                 f = onUserSendsKeyboardMapping
-                break
+                break*/
             case Constants.MSG_TYPES.JOIN_GAME :
                 f = onUserSendsJoin
                 break
@@ -291,9 +328,24 @@ function createSopichWebSocketGame( name ){
             game.removePlayer( username )
             socketByUsername.delete( username )
         })
+        /*
+        setTimeout( () => {
+            'close machin',
+            ws.close()
+        },5000)
+        */
+        
     })
 }
+createSopichWebSocketGame('monsocketserver1')
 createSopichWebSocketGame('monsocketserver12')
+createSopichWebSocketGame('monsocketserver123')
+createSopichWebSocketGame('monsocketserver1234')
+createSopichWebSocketGame('monsocketserver12345')
+/*
+createSopichWebSocketGame('monsocketserver2')
+createSopichWebSocketGame('monsocketserver3')
+*/
 
 
 // function NON(){
