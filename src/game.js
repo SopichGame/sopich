@@ -123,7 +123,25 @@ export const HEIGHTMAP_TYPE = {
 export const ATTACK_TYPE = {
     'collision' : 0,
 }
+import { OptionsParser } from './gameoptions.js'
 
+const Definitions = {
+    showTeamScore : { parser : 'parseBool', defaults : false },
+    showPlayerScore: { parser : 'parseBool', defaults : false },
+    stayOnGameOver: { parser : 'parseNatural', defaults : 70 },
+    maxTeamScore: { parser : 'parsePositiveNatural', defaults : 5 },
+    minesCount: { parser : 'parseNatural', defaults : 0  },
+}
+const optionsParser = OptionsParser( Definitions )
+// console.log({
+//     xx : optionsParser.parseOptions({
+//         'showTeamScore' : true,
+//         'showPlayerScore' : 64,
+//         'stayOnGameOver' : 70,
+//         'maxTeamScore' : 20,
+//         'minesCount' : 99
+//     })
+// })
 //import { Island } from './object/island.js'
 export function Game( { tellPlayer, // called with user centered world, each world update 
                         tellScore,  // called with player score, when quitting
@@ -137,7 +155,8 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         showTeamScore : true,
         showPlayerScore : true,
         stayOnGameOver : 70,
-        maxTeamScore : 20
+        maxTeamScore : 20,
+        minesCount : undefined
     }
     const GameState = {
         state : 'playing',
@@ -589,19 +608,19 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         })
         
     }
-    function planeSkeletton( { Items }, source ){
-        //console.log('skel source',source)
-        const id =  Items.create( { 
-            player : source.player,
-            sprite : source.sprite,
-            position : source.position,
-            direction : source.direction,
-            r : source.r,
-            bb : {},
-            color : source.color
-        })
-        return id
-    }
+    // function planeSkeletton( { Items }, source ){
+    //     //console.log('skel source',source)
+    //     const id =  Items.create( { 
+    //         player : source.player,
+    //         sprite : source.sprite,
+    //         position : source.position,
+    //         direction : source.direction,
+    //         r : source.r,
+    //         bb : {},
+    //         color : source.color
+    //     })
+    //     return id
+    // }
     function createAndPlacePlayer( { name, totalScore, colorScheme, teamId } ) {
 
         const found = firstPlayerByName( name )
@@ -867,11 +886,13 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         createWater( World ) 
         createIslands( World ) 
         createFlyingBalloon( World )
-        new Array(20).fill(0).map( () => {
-            const x = worldSize.x1 + Math.random() * worldSize.w
-            const y = worldSize.y1 + Math.random() * worldSize.h
-            createMine( x, y, 0 )
-        })
+        if ( Options.minesCount ){
+            new Array( Options.minesCount ).fill(0).map( () => {
+                const x = worldSize.x1 + Math.random() * worldSize.w
+                const y = worldSize.y1 + Math.random() * worldSize.h
+                createMine( x, y, 0 )
+            })
+        }
     }
     iii()
     //createMine( 400,300, 0 )
@@ -944,12 +965,18 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 handleDeath( id )
             })
             
-            World.Components.score.forEach( ([scoreId,score]) => {
-                const { total } = score
-                if ( total >= Options.maxTeamScore ){
-                    gameState.send('max-score-reached')
-                }
-            })
+            function maximumScoreExitCondition( World ){
+                World.Components.score.forEach( ([scoreId,score]) => {
+                    const { total } = score
+                    if ( total >= Options.maxTeamScore ){
+                        gameState.send('max-score-reached')
+                    }
+                })
+            }
+            const exitCondition = maximumScoreExitCondition( World )
+            if ( exitCondition ){
+                
+            }
         }
         //dbgItems()
         

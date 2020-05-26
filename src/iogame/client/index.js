@@ -76,8 +76,6 @@ fsm.on.enter.init = () => {
     fetch('me').then( x => x.json() ).then( yourinfo => {
         const { username, keyboardMapping, score } = yourinfo
         console.log({yourinfo})
-      
-        
         usernameDiv.textContent = username
         keyboardMappingLoaded( keyboardMapping )
     })
