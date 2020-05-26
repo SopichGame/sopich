@@ -186,3 +186,27 @@ canvas {
 .active-remapping {
     font-weight : bold;
 }
+.players-list, .options-list {
+    font-size: 18px;
+    font-family : mono;
+    outline: none;
+    
+    border: none;
+    
+    color: black;
+    
+    background-color: transparent;
+    
+    padding: 5px 20px;
+    
+    border-radius: 3px;
+
+}
+.options-list {
+  
+
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    /*grid-gap: 10px;
+    grid-auto-rows: minmax(100px, auto);*/
+}

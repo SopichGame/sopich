@@ -9,6 +9,8 @@ import { remapControlsButton, remapControlsButtonClicked,
          keyboardMappingLoaded } from './remapcontrols.js'
 import { Fsm } from '../../fsm.js'
 import { Games } from './games.js'
+import { Options } from './options.js'
+import { Players } from './players.js'
 import { processGameUpdate } from './state';
 import { ADD_PLAYER_RETURNS } from '../../game'
 
@@ -18,6 +20,8 @@ const playButton = document.getElementById('play-button');
 const usernameInput = document.getElementById('username-input');
 const notJoinedReason = document.getElementById('not-joined-reason');
 const gamesList = document.getElementById('games-list');
+const optionsList = document.getElementById('options-list');
+const playersList = document.getElementById('players-list');
 const menu = new Menu.Menu( Menu.Definitions, Menu.defaultStore )
 
 
@@ -66,6 +70,9 @@ const stateData = {
 
 }
 const games = Games( gamesList )
+const options = Options( optionsList )
+const players = Players( playersList )
+
 games.on.gameSelected = name => {
     stateData.selectedGame = name
     fsmi.send.connect()
@@ -104,6 +111,16 @@ fsm.on.enter.connected = () => {
         fsmi.send.play()       
         gs.play()
     }
+    console.log('here?')
+    options.$container.classList.remove('hidden')
+    options.update( stateData.selectedGame )
+
+    players.$container.classList.remove('hidden')
+    players.update( stateData.selectedGame )
+/*
+    games.$container.classList.remove('hidden')
+    games.update()
+*/
 }
 fsm.on.enter.try_join = () => {
     console.log('try join')

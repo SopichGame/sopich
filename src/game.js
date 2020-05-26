@@ -132,6 +132,7 @@ const Definitions = {
     stayOnReset: { parser : 'parsePositiveNatural', defaults : 70 },
     maxTeamScore: { parser : 'parsePositiveNatural', defaults : 5 },
     minesCount: { parser : 'parseNatural', defaults : 0  },
+    maxPlayers: { parser : 'parsePositiveNatural', defaults : 8  },
 }
 const optionsParser = OptionsParser( Definitions )
 // console.log({
@@ -153,14 +154,17 @@ export function Game( { tellPlayer, // called with user centered world, each wor
     
     const World = mkWorld()
     const { Components, Systems, Items, Events } = World
+
     const seed = "braoume"
+    
     const Options = optionsParser.parseOptions({
         showTeamScore : true,
         showPlayerScore : true,
         stayOnGameOver : 70,
         stayOnReset : 50,
         maxTeamScore : 5,
-        minesCount : undefined
+        minesCount : undefined,
+        // maxPlayers : 1
     })
     const gameStateFsm = Fsm([
         { name : 'start', from : 'init', to : 'playing' },
@@ -189,55 +193,8 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         resetMatch()
         stateData.waitTo = Options.stayOnReset
     }
-    // each step    GameState.waitTo--
-
     
     const fsmi =  gameStateFsm.run( 'init' )
-
-    // const GameState = {
-    //     state : 'playing',
-    //     waitTo : undefined
-    // }
-    // const gameState = {}
-    // gameState.send = ( message ) => {
-    //     const isn = GameState.state
-    //     //console.log('from',GameState)
-    //     switch ( GameState.state ){
-    //     case 'playing' : {
-    //         switch ( message ){
-    //         case 'max-score-reached' : {
-    //             GameState.state = 'over'
-    //             GameState.waitTo = Options.stayOnGameOver
-    //             break
-    //         }
-    //         }
-    //         break
-    //     }
-    //     case 'over' : {
-    //         switch ( message ){
-    //         case 'replay' : {
-    //             GameState.waitTo--
-    //             if ( GameState.waitTo <= 0 ){
-    //                 GameState.state = 'reset'
-    //             }
-    //             break
-    //         }
-    //         }
-    //         break
-    //     }
-    //     case 'reset' : {
-    //         switch ( message ){
-    //         case 'replay' : {
-    //             GameState.state = 'playing'
-    //         }
-    //         }
-    //         break
-    //     }
-    //     }
-    //     if ( GameState.state !== isn ){
-    //         console.log('from',isn,'to',GameState)
-    //     }
-    // }
 
     function EventsWatchUntil( condition, f, interval = 1 ){
         const timeoutId = Events.pulse( interval, watchF )
@@ -1363,10 +1320,19 @@ export function Game( { tellPlayer, // called with user centered world, each wor
     }
     function addPlayer( name, _, totalScore ){
         console.log('Addplayer', {name,_,totalScore})
+        
         const found = firstPlayerByName( name )
-        /*        Systems.team.forEach( ([teamId]) => {
-                  console.log('team',teamId)
-                  })*/
+        if ( found !== undefined ){
+            console.log('ALREADY EXISTS',name)
+            return ADD_PLAYER_RETURNS.ALREADY_JOINED
+        }
+        
+        const playerCount = getPlayers().length
+        if ( playerCount >= Options.maxPlayers ){
+            console.log('GAME FULL',name)
+            return ADD_PLAYER_RETURNS.NO_MORE_AVAILABLE_ITEM            
+        }
+             
         let teamId = undefined
         {            
             const smallest = { size : undefined, id : undefined }
@@ -1384,15 +1350,12 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         const isPlacer = found && Components.placement.has( found )
         console.log({isPlacer})
         
-        if ( found !== undefined ){
-            console.log('ALREADY EXISTS',name)
-            return ADD_PLAYER_RETURNS.ALREADY_JOINED
-        } else {
+        
             createAndPlacePlayer( { name, totalScore : 0, teamId } )
             //createPlayer( name, score )
             // dbgItems()
             return ADD_PLAYER_RETURNS.OK
-        }
+        
     }
     function removePlayer( name ){
         console.log('please remove',name)
@@ -1431,6 +1394,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         handleInput,
         handleAddEntity,
         getPlayers,
+        getOptions : () => Options
     }
 }
 /// pb is : controllers applys to layncher directio

@@ -169,7 +169,7 @@ app.post('/keyboardmapping', [
     }
 ])
 app.get('/me',  [
-    async ( req, res) => {
+    async ( req, res ) => {
         const username = req.user.username
         const user = await User.findOne( { username } )
         const yourinfo = {
@@ -180,15 +180,37 @@ app.get('/me',  [
         res.json( yourinfo )
     }])
 app.get('/games',  [
-    ( req, res) => {
+    ( req, res ) => {
         const list = []
         gamesManager.forEach( ( game, name ) => {
             const players = game.getPlayers()
+            /* const options = game.getOptions() */ 
             list.push( { name, players } )
         })
         res.json(list)
     }])
-
+app.get('/game/:name/options',  [
+    ( req, res ) => {
+        const list = []
+        try {
+            const game = gamesManager.get( req.params.name )
+            const options = game.getOptions()
+            res.json( options )
+        } catch( e ){
+            res.json( {} )
+        }
+    }])
+app.get('/game/:name/players',  [
+    ( req, res ) => {
+        const list = []
+        try {
+            const game = gamesManager.get( req.params.name )
+            const players = game.getPlayers()
+            res.json( players )
+        } catch( e ){
+            res.json( {} )
+        }
+    }])
 
 const Messages = require('../shared/messages.js')
 
@@ -339,9 +361,9 @@ function createSopichWebSocketGame( name ){
 }
 createSopichWebSocketGame('monsocketserver1')
 createSopichWebSocketGame('monsocketserver12')
-createSopichWebSocketGame('monsocketserver123')
-createSopichWebSocketGame('monsocketserver1234')
-createSopichWebSocketGame('monsocketserver12345')
+// createSopichWebSocketGame('monsocketserver123')
+// createSopichWebSocketGame('monsocketserver1234')
+// createSopichWebSocketGame('monsocketserver12345')
 /*
 createSopichWebSocketGame('monsocketserver2')
 createSopichWebSocketGame('monsocketserver3')
