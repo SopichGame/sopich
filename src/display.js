@@ -814,8 +814,9 @@ export function Display() {
 
         //
         const state = State.s
-        const gameover = ( state === 'over' )
-        if ( gameover ){
+        const gameover = ( state === 'game_over' )
+        const reset = ( state === 'reset' )
+        if ( gameover || reset ){
             
             $context.beginPath()
             $context.fillStyle = 'rgba(0,0,0,0.6)'
@@ -824,10 +825,16 @@ export function Display() {
                               $canvas.height)
             
             $context.beginPath()
-            $context.font = '15px mono'
+            const fontSize = 15
+            $context.font = `${ fontSize }px mono`
             $context.fillStyle = 'green'
-            $context.fillText('GAME OVER',
-                              $canvas.width/2,
+            const text = ({
+                game_over : 'GAME OVER',
+                reset : 'PREPARE',
+            })[ state ]
+            const offset = -1 * fontSize * text.length / 2
+            $context.fillText(text,
+                              $canvas.width/2 + offset,
                               $canvas.height/2)
 
         } else {

@@ -129,6 +129,7 @@ const Definitions = {
     showTeamScore : { parser : 'parseBool', defaults : false },
     showPlayerScore: { parser : 'parseBool', defaults : false },
     stayOnGameOver: { parser : 'parseNatural', defaults : 70 },
+    stayOnReset: { parser : 'parsePositiveNatural', defaults : 70 },
     maxTeamScore: { parser : 'parsePositiveNatural', defaults : 5 },
     minesCount: { parser : 'parseNatural', defaults : 0  },
 }
@@ -143,6 +144,8 @@ const optionsParser = OptionsParser( Definitions )
 //     })
 // })
 //import { Island } from './object/island.js'
+import { Fsm } from './fsm.js'
+
 export function Game( { tellPlayer, // called with user centered world, each world update 
                         tellScore,  // called with player score, when quitting
                       } ) {
@@ -151,57 +154,90 @@ export function Game( { tellPlayer, // called with user centered world, each wor
     const World = mkWorld()
     const { Components, Systems, Items, Events } = World
     const seed = "braoume"
-    const Options = {
+    const Options = optionsParser.parseOptions({
         showTeamScore : true,
         showPlayerScore : true,
         stayOnGameOver : 70,
-        maxTeamScore : 20,
+        stayOnReset : 50,
+        maxTeamScore : 5,
         minesCount : undefined
-    }
-    const GameState = {
-        state : 'playing',
+    })
+    const gameStateFsm = Fsm([
+        { name : 'start', from : 'init', to : 'playing' },
+        { name : 'pause', from : 'playing', to : 'paused' },
+        { name : 'unpause', from : 'paused', to : 'playing' },
+        { name : 'stop_paused', from : 'paused', to : 'end' },           
+        { name : 'game_over', from : 'playing', to : 'game_over' },           
+        { name : 'stop_game_over', from : 'game_over', to : 'end' },
+        { name : 'replay1', from : 'game_over', to : 'reset' },
+        { name : 'replay2', from : 'reset', to : 'playing' },
+    ])
+    const stateData = {
         waitTo : undefined
     }
-    const gameState = {}
-    gameState.send = ( message ) => {
-        const isn = GameState.state
-        //console.log('from',GameState)
-        switch ( GameState.state ){
-        case 'playing' : {
-            switch ( message ){
-            case 'max-score-reached' : {
-                GameState.state = 'over'
-                GameState.waitTo = Options.stayOnGameOver
-                break
-            }
-            }
-            break
-        }
-        case 'over' : {
-            switch ( message ){
-            case 'replay' : {
-                GameState.waitTo--
-                if ( GameState.waitTo <= 0 ){
-                    GameState.state = 'reset'
-                }
-                break
-            }
-            }
-            break
-        }
-        case 'reset' : {
-            switch ( message ){
-            case 'replay' : {
-                GameState.state = 'playing'
-            }
-            }
-            break
-        }
-        }
-        if ( GameState.state !== isn ){
-            console.log('from',isn,'to',GameState)
-        }
+    gameStateFsm.on.enter.playing = () => {
+        console.log('now playing')
+        // stateData.waitTo = Options.stayOnGameOver
     }
+    gameStateFsm.on.enter.game_over = () => {
+        stateData.waitTo = Options.stayOnGameOver
+    }
+    gameStateFsm.on.leave.game_over = () => {
+        stateData.waitTo = undefined
+    }
+    gameStateFsm.on.enter.reset = () => {
+        resetMatch()
+        stateData.waitTo = Options.stayOnReset
+    }
+    // each step    GameState.waitTo--
+
+    
+    const fsmi =  gameStateFsm.run( 'init' )
+
+    // const GameState = {
+    //     state : 'playing',
+    //     waitTo : undefined
+    // }
+    // const gameState = {}
+    // gameState.send = ( message ) => {
+    //     const isn = GameState.state
+    //     //console.log('from',GameState)
+    //     switch ( GameState.state ){
+    //     case 'playing' : {
+    //         switch ( message ){
+    //         case 'max-score-reached' : {
+    //             GameState.state = 'over'
+    //             GameState.waitTo = Options.stayOnGameOver
+    //             break
+    //         }
+    //         }
+    //         break
+    //     }
+    //     case 'over' : {
+    //         switch ( message ){
+    //         case 'replay' : {
+    //             GameState.waitTo--
+    //             if ( GameState.waitTo <= 0 ){
+    //                 GameState.state = 'reset'
+    //             }
+    //             break
+    //         }
+    //         }
+    //         break
+    //     }
+    //     case 'reset' : {
+    //         switch ( message ){
+    //         case 'replay' : {
+    //             GameState.state = 'playing'
+    //         }
+    //         }
+    //         break
+    //     }
+    //     }
+    //     if ( GameState.state !== isn ){
+    //         console.log('from',isn,'to',GameState)
+    //     }
+    // }
 
     function EventsWatchUntil( condition, f, interval = 1 ){
         const timeoutId = Events.pulse( interval, watchF )
@@ -898,11 +934,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
     //createMine( 400,300, 0 )
     //createMine( 200,400, 1 )
 
-    
-    function update(){
-        if ( GameState.state === 'over' ){
-            gameState.send('replay')
-        } else if ( GameState.state === 'reset' ){
+    function resetMatch(){
             const { Systems, Components, Items } = World
             const playerInfos = []
             Components.player.forEach( ([id,player]) => {
@@ -931,10 +963,28 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             })
 
             
-            gameState.send('replay')
-        } else if ( GameState.state === 'playing' ){
+           
+        
+    }
+    function update(){
+        const state = fsmi.getState()
+        if ( state === 'init' ){
+            fsmi.send.start()
+        } else if ( state === 'game_over' ){
+            if ( stateData.waitTo <= 0 ){
+                fsmi.send.replay1()
+            } else {
+                stateData.waitTo--
+            }
+        } else if ( state === 'reset' ){
+            if ( stateData.waitTo <= 0 ){
+                fsmi.send.replay2()
+            } else {
+                stateData.waitTo--
+            }
+        } else if ( state === 'playing' ){
             let version = World.getVersion()
-
+            
             const timers = {}        
             timers.step = { start : Date.now() }
             World.step( )
@@ -969,7 +1019,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 World.Components.score.forEach( ([scoreId,score]) => {
                     const { total } = score
                     if ( total >= Options.maxTeamScore ){
-                        gameState.send('max-score-reached')
+                        fsmi.send.game_over()//gameState.send('max-score-reached')
                     }
                 })
             }
@@ -1285,7 +1335,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 t : Date.now(),
                 version : World.getVersion(),
                 justfired : [],
-                s : GameState.state,
+                s : fsmi.getState(),
             }
         )
         if ( mkLeaderboard ){
@@ -1312,6 +1362,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         }        
     }
     function addPlayer( name, _, totalScore ){
+        console.log('Addplayer', {name,_,totalScore})
         const found = firstPlayerByName( name )
         /*        Systems.team.forEach( ([teamId]) => {
                   console.log('team',teamId)
@@ -1349,20 +1400,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         if ( found ){
             console.log('finished for',name,found)
             Items.remove( found )
-        }
-        /*
-          Components.player.forEach( ([ playerId, player ]) => {
-          console.log('is it',playerId, player)
-          if ( name === player.name ){
-          console.log( 'yes')
-          Items.remove( playerId )
-          }
-          })
-          setTimeout( function(){
-          console.log('post mortem')
-          // dbgItems()
-          },1000)
-        */
+        }       
     }
     function getPlayers(){
         const names = []
