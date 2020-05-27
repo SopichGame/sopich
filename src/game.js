@@ -55,6 +55,7 @@ export const ADD_PLAYER_RETURNS = {
     NO_MORE_AVAILABLE_ITEM : 4,
     USERNAME_ALREADY_IN_USE : 5
 }
+import { Controls } from './controller.js'
 export const PLANE_INPUT_NAMES = [
     'noseup','nosedown','reverse',
     'powerup','powerdown',
@@ -628,7 +629,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
     //     })
     //     return id
     // }
-    function createAndPlacePlayer( { name, totalScore, colorScheme, teamId } ) {
+    function createAndPlacePlayer( { name, score, colorScheme, teamId, cipiu } ) {
 
         const found = firstPlayerByName( name )
         if ( found )
@@ -636,7 +637,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         
         createPlacer( worldSize, 1, ( freePosition ) => {
             // console.log('occupation', freePosition, 'isAvailable' )
-            const id = createPlayer( { name, totalScore, colorScheme, teamId } )
+            const id = createPlayer( { name, score, colorScheme, teamId, cipiu } )
             const position = Components.position.get( id )
             if ( position ){
                 position.x = freePosition.x
@@ -648,7 +649,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             member : { teamId },
         })
     }
-    function createPlayer( { name, totalScore, colorScheme, teamId } ){
+    function createPlayer( { name, score, colorScheme, teamId, cipiu } ){
         
         if ( colorScheme === undefined ){
             // get a constant random color scheme from name
@@ -657,10 +658,11 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             colorScheme = num
         }
         let version = World.getVersion()
+        const cipiuc = ( cipiu )?( { cipiu : { cipiuType : 0 } } ):({})
         const id1 = Items.create( {            
             fly : { freefall : 0 },
             player : { name },
-            score : { total : totalScore },
+            score : { total : score },
             member : { teamId },
             position : { x : 200 + Math.random() * 800, y : 200 },
             direction : { a16 : 0 },
@@ -679,9 +681,8 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             attack : { collision : 10 },
             health : { life : 10, maxLife : 10 },
             worldbounds : { /*nobounce : true*/ },
-
+            ...cipiuc,
         } )
-        
         const speedAndDirTimedActuator = createDesignatedTimedActuator(
             id1, 1, name, ['noseup','nosedown', 'powerup','powerdown', 'reverse' ]
         )
@@ -737,13 +738,15 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             const member = Components.member.get( id )
             const score = Components.score.get( id )
             const color = Components.color.get( id )
+            const cipiu = Components.cipiu.get( id )
             // console.log('dead',{ player, member, color })
             Events.onTimeoutId( toId, W => {
                 if ( Components.player.has( id ) ){
                     Items.remove( id )
                     createAndPlacePlayer( { name : player.name,
-                                            totalScore : score.total,
-                                            teamId : member.teamId
+                                            score : score.total,
+                                            teamId : member.teamId,
+                                            cipiu : cipiu
                                           })
                 }
             })
@@ -900,6 +903,14 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 createMine( x, y, 0 )
             })
         }
+
+        Events.wait( 1 * 10, () => addPlayer( { name : 'cipiu1', score : 0, cipiu : true } ) )
+        Events.wait( 2 * 10, () => addPlayer( { name : 'cipiu2', score : 0, cipiu : true } ) )   
+        Events.wait( 3 * 10, () => addPlayer( { name : 'cipiu3', score : 0, cipiu : true } ) )
+        Events.wait( 4 * 10, () => addPlayer( { name : 'cipiu4', score : 0, cipiu : true } ) )
+        Events.wait( 5 * 10, () => addPlayer( { name : 'cipiu5', score : 0, cipiu : true } ) )
+        Events.wait( 6 * 10, () => addPlayer( { name : 'cipiu6', score : 0, cipiu : true } ) )
+
     }
     iii()
     //createMine( 400,300, 0 )
@@ -919,6 +930,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         playerInfos.forEach( ({ player, member, color }) => {
             const { name } = player
             const { teamId } = member
+            const { cipiu } = member
             //const { cs } = color
             createAndPlacePlayer( { name, teamId, /* colorScheme : cs,*/ totalScore : 0, } )
             console.log('+player', { player, member, color } )
@@ -955,6 +967,16 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             }
         } else if ( state === 'playing' ){
             let version = World.getVersion()
+
+            Components.cipiu.forEach( ([id,cipiu]) => {
+                const player = Components.player.get( id )
+                if ( player && player.name ){
+                    const name = player.name
+                    const pushButton = button => handleInput( name, [ button ] )
+                    const randomControl = Controls[ Math.floor( Math.random() * Controls.length ) ]
+                    pushButton( randomControl )
+                }
+            })
             
             const timers = {}        
             timers.step = { start : Date.now() }
@@ -1349,8 +1371,8 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             }
         }        
     }
-    function addPlayer( name, _, totalScore ){
-        console.log('Addplayer', {name,_,totalScore})
+    function addPlayer( { name, score = 0, cipiu = false } ){
+        console.log('Addplayer', {cipiu, name,score})
         
         const found = firstPlayerByName( name )
         if ( found !== undefined ){
@@ -1382,7 +1404,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         console.log({isPlacer})
         
         
-        createAndPlacePlayer( { name, totalScore : 0, teamId } )
+        createAndPlacePlayer( { name, score, teamId, cipiu } )
         //createPlayer( name, score )
         // dbgItems()
         return ADD_PLAYER_RETURNS.OK

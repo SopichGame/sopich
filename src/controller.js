@@ -8,7 +8,7 @@ const DefaultKeyboardMapping = {
     'firebomb': ['KeyP','ControlRight'] ,
     'fireguidedmissile': ['Space','Enter'] ,
 }
-
+export const Controls = Object.keys( DefaultKeyboardMapping )
 export const KeyboardMapping = {}
 let mappingByKey = {}
 resetKeyboardMapping( KeyboardMapping )

@@ -295,7 +295,7 @@ function createSopichWebSocketGame( name ){
         */
         
         function onUserSendsJoin(){
-            const error = game.addPlayer( username, username,  user.score )
+            const error = game.addPlayer( { name : username,  score : user.score } )
             if ( error === 0 ){
                 gameDebugMessage(username, 'joined game' )
                 send( ws, Constants.MSG_TYPES.JOINED_GAME_OK )

@@ -172,8 +172,12 @@ export function mkComponents(){
             copy : ( { type, volume } ) => ( {
                 type, volume
             })
-        }),     
-
+        }),
+        cipiu : cmpStrg( {
+            copy : ( { cipiuType } ) => ( {
+                cipiuType
+            })
+        }),
     }
     return byName
 }
