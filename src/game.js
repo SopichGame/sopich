@@ -932,7 +932,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             const { teamId } = member
             const { cipiu } = member
             //const { cs } = color
-            createAndPlacePlayer( { name, teamId, /* colorScheme : cs,*/ totalScore : 0, } )
+            createAndPlacePlayer( { name, teamId, /* colorScheme : cs,*/ score : 0, } )
             console.log('+player', { player, member, color } )
         })
         
