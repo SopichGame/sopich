@@ -1,7 +1,6 @@
 import { waitAudioContext, instanciateModule } from './audioutils.js'
-import { dist } from './utils.js'
-import { NOISE_NUM_BY_NAME } from './game.js'
-
+import { dist, clamp } from './utils.js'
+import { NOISE_TYPES, NOISE_NUM_BY_NAME } from './game.js'
 // buffers
 function prepareBuffer( ctx, duration, f ){
     const bufferSize = ctx.sampleRate * duration
@@ -143,27 +142,46 @@ export function Audio(){
         lastSeenVersion : undefined,
         started : false
     }
-    function playSources( sources ){
+    function playSources( byType ){
 
         if ( audioContext === undefined )
             return
 
         if ( synth === undefined )
             return
-
-        sources.forEach( source => {
-            const { discrete, x, y, distance, type, volume } = source
+        byType.forEach( source => {
+            if ( source === undefined )
+                return
+            
+            //console.log( source )
+            //sources.forEach( source => {
+            // const source = o.
+            const { discrete, x, y, distance, type, volume = 1} = source
             //console.log('play', type, volume, 'at', distance, synth )
+
+            let attenuation
+            // linear attenuation
+            const distanceThreshold1 = 200
+            const distanceThreshold2 = 800
+            if ( distance > distanceThreshold1 ){
+                const c = clamp( distance, distanceThreshold1, distanceThreshold2 ),
+                      r = ( c - distanceThreshold1 ) / ( distanceThreshold2 - distanceThreshold1 )
+                attenuation = 1 - r
+            } else {
+                attenuation = 1
+            }
+            const v = volume * attenuation
+            
             if ( discrete ) {
                 if( type === NOISE_NUM_BY_NAME['missile-fired'] ){
                     synth.audioParam('missile.fader/gain')
                         .cancelScheduledValues( audioContext.currentTime )
-                        .setValueAtTime( 1, audioContext.currentTime)
+                        .setValueAtTime( v, audioContext.currentTime)
                         .linearRampToValueAtTime( 0, audioContext.currentTime + 0.1)
                 } else if (type === NOISE_NUM_BY_NAME['bomb-fired'] ){
                     synth.audioParam('bomb.fader/gain')
                         .cancelScheduledValues( audioContext.currentTime )
-                        .setValueAtTime( 1, audioContext.currentTime)
+                        .setValueAtTime( v, audioContext.currentTime)
                         .linearRampToValueAtTime( 0, audioContext.currentTime + 0.1)
                 }
             } else {
@@ -172,15 +190,20 @@ export function Audio(){
                     //console.log(synth.audioParam('death.fader/gain'))
                     synth.audioParam('death.fader/gain')
                         .cancelScheduledValues( audioContext.currentTime )
-                        .setValueAtTime( 1, audioContext.currentTime)
+                        .setValueAtTime( v, audioContext.currentTime)
                         .linearRampToValueAtTime( 0, audioContext.currentTime + 0.2 )
                 } else if ( type === NOISE_NUM_BY_NAME['damage'] ){
+                    const current = synth.audioParam('damage.fader/gain').value
+                    if ( current < v ){
+                        //console.log( current,'->',v )
+
                     //console.log({'here':type})
                     // console.log(synth.audioParam('damage.fader/gain'))
                     synth.audioParam('damage.fader/gain')
                         .cancelScheduledValues( audioContext.currentTime )
-                        .setValueAtTime( 1, audioContext.currentTime)
-                        .linearRampToValueAtTime( 0, audioContext.currentTime + 0.8 )
+                        .setValueAtTime( v, audioContext.currentTime)
+                            .linearRampToValueAtTime( 0, audioContext.currentTime + 0.8 )
+                    }
                 }
             } 
         })
@@ -222,7 +245,10 @@ export function Audio(){
                 })
             }
         })
-        const sources = noises.map( item => {
+
+        // get nearest sound of each type
+        const byType = NOISE_TYPES.map( source => undefined )
+        noises.forEach( item => {
             const { discrete, x, y, type, volume } = item
             let distance
             if ( me !== undefined ){
@@ -230,9 +256,15 @@ export function Audio(){
             } else {
                 distance = 0
             }
-            return { x, y, distance, discrete, type, volume }
+            const o = byType[ type ]
+            if ( ( o === undefined )
+                 || ( o.distance < o.minDist  ) ){
+                const source = { x, y, distance, discrete, type, volume }
+                byType[ type ] = source
+            }
         })
-        return sources
+        //console.log( byType )
+        return byType
     }
     function setState( s ){
         const version = s.version
@@ -247,7 +279,6 @@ export function Audio(){
     function getSynth( ctx ){
         if ( audioContext == undefined ) return
         if ( synth !== undefined ) return synth
-        console.log( whiteNoiseBuffer( audioContext ) )
         const synth = instanciateModule( ctx, synthModel, {
             buffers : { 'whitenoise' : whiteNoiseBuffer( audioContext ) }
         })

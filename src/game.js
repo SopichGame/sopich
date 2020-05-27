@@ -123,7 +123,7 @@ export const HEIGHTMAP_TYPE = {
 export const ATTACK_TYPE = {
     'collision' : 0,
 }
-const NOISE_TYPES = [ 'missile-fired', 'bomb-fired', 'death', 'damage' ]
+export const NOISE_TYPES = [ 'missile-fired', 'bomb-fired', 'death', 'damage' ]
 export const NOISE_NUM_BY_NAME = NOISE_TYPES.reduce( (r,x,i) => {
     r[ x ] = i
     return r
@@ -173,7 +173,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         stayOnGameOver : 70,
         stayOnReset : 50,
         maxTeamScore : 5,
-        minesCount : 50,
+        minesCount : 5,
         // maxPlayers : 1
     })
     const gameStateFsm = Fsm([
@@ -905,12 +905,12 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         }
 
         Events.wait( 1 * 10, () => addPlayer( { name : 'cipiu1', score : 0, cipiu : true } ) )
-        Events.wait( 2 * 10, () => addPlayer( { name : 'cipiu2', score : 0, cipiu : true } ) )   
+/*        Events.wait( 2 * 10, () => addPlayer( { name : 'cipiu2', score : 0, cipiu : true } ) )   
         Events.wait( 3 * 10, () => addPlayer( { name : 'cipiu3', score : 0, cipiu : true } ) )
         Events.wait( 4 * 10, () => addPlayer( { name : 'cipiu4', score : 0, cipiu : true } ) )
         Events.wait( 5 * 10, () => addPlayer( { name : 'cipiu5', score : 0, cipiu : true } ) )
         Events.wait( 6 * 10, () => addPlayer( { name : 'cipiu6', score : 0, cipiu : true } ) )
-
+*/
     }
     iii()
     //createMine( 400,300, 0 )
