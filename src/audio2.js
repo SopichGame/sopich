@@ -2,10 +2,41 @@ import { waitAudioContext, instanciateModule } from './audioutils.js'
 import { dist } from './utils.js'
 import { NOISE_NUM_BY_NAME } from './game.js'
 
-const synthModel1 = { // missile
+// buffers
+function prepareBuffer( ctx, duration, f ){
+    const bufferSize = ctx.sampleRate * duration
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
+    let data = buffer.getChannelData(0)
+    for (let i = 0; i < bufferSize; i++) {
+        data[i] = f(i)
+    }
+    return buffer
+}
+function whiteNoiseBuffer( ctx ){
+    return prepareBuffer( ctx, 1, i => Math.random() * 2 - 1 )
+}
+
+
+const synthFmModel = { // missile
     nodes : {
-        osc1 : { node : 'oscillator' },
-        osc2 : { node : 'oscillator' },
+        modulator : { node : 'oscillator', ap : { frequency : 10 }},
+        carrier : { node : 'oscillator', ap : { frequency : 220 }},
+        gain : { node : 'gain', ap : { gain : 6000 } },
+        attenuation : { node : 'gain', ap : { gain : 0.5 } },
+        fader : { node : 'gain', ap : { gain : 0.0 } },
+    },
+    connections : [
+        [ 'modulator', 'gain' ],
+        [ 'gain', 'carrier/frequency' ],
+        [ 'carrier', 'attenuation' ],
+        [ 'attenuation', 'fader' ]
+    ],
+    outputs : ['fader' ]
+}
+const synthModel1 = {  // missile
+    nodes : {
+        osc1 : { node : 'oscillator',  ap : { frequency : 440} },
+        osc2 : { node : 'oscillator',  ap : { frequency : 219 } },
         fader1 : { node : 'gain' , ap : { gain : 0.5 } },
         fader2 : { node : 'gain' , ap : { gain : 0.5 } },
         fader : { node : 'gain' , ap : { gain : 0.0 } },
@@ -21,7 +52,7 @@ const synthModel1 = { // missile
 const synthModel2 = {  // bomb
     nodes : {
         osc1 : { node : 'oscillator',  ap : { frequency : 100 } },
-        osc2 : { node : 'oscillator',  ap : { frequency : 100 } },
+        osc2 : { node : 'oscillator',  ap : { frequency : 201 } },
         fader1 : { node : 'gain' , ap : { gain : 0.5 } },
         fader2 : { node : 'gain' , ap : { gain : 0.5 } },
         fader : { node : 'gain' , ap : { gain : 0.0 } },
@@ -36,10 +67,10 @@ const synthModel2 = {  // bomb
 }
 const synthModel3 = {  // death
     nodes : {
-        osc1 : { node : 'oscillator',  ap : { frequency : 300 } },
-        osc2 : { node : 'oscillator',  ap : { frequency : 300 } },
-        fader1 : { node : 'gain' , ap : { gain : 0.5 } },
-        fader2 : { node : 'gain' , ap : { gain : 0.5 } },
+        osc1 : { node : 'oscillator',  ap : { frequency : 263.74 * 2 } },
+        osc2 : { node : 'oscillator',  ap : { frequency : 372.98 * 2 } },
+        fader1 : { node : 'gain' , ap : { gain : 1/16 } },
+        fader2 : { node : 'gain' , ap : { gain : 1/16 } },
         fader : { node : 'gain' , ap : { gain : 0.0 } },
     },
     connections : [
@@ -51,6 +82,26 @@ const synthModel3 = {  // death
     outputs : ['fader' ]
 }
 const synthModel4 = { // damage
+    // freq = constant.offset + modulator([-1,1]) * modgain.gain
+    nodes : {
+        /*constant : { node : 'constantSource', ap : { offset : 0.5 }},
+        modulator : { node : 'oscillator', ap : { frequency : 1 }},
+        modgain : { node : 'gain', ap : { gain : 0.5 } },
+        */
+        noise : { node : 'bufferSource', buffer : 'whitenoise',
+                  p : { loop : true },
+                  ap: { playbackRate : 0.4 } },
+        attenuator : { node : 'gain', ap : { gain :0.25 } },
+        fader : { node : 'gain' , ap : { gain : 0.0 } },
+    },
+    connections : [
+        //[ 'modulator', 'modgain' ],
+        //[ 'modgain', 'noise/playbackRate' ],
+        //[ 'constant', 'noise/playbackRate' ],
+        [ 'noise', 'attenuator' ],
+        [ 'attenuator', 'fader' ],
+    ],
+   /*
     nodes : {
         osc1 : { node : 'oscillator',  ap : { frequency : 800 } },
         osc2 : { node : 'oscillator',  ap : { frequency : 800 } },
@@ -64,6 +115,7 @@ const synthModel4 = { // damage
         [ 'fader1', 'fader' ],
         [ 'fader2', 'fader' ]
     ],
+    */
     outputs : ['fader' ]
 }
 const synthModel = {
@@ -128,7 +180,7 @@ export function Audio(){
                     synth.audioParam('damage.fader/gain')
                         .cancelScheduledValues( audioContext.currentTime )
                         .setValueAtTime( 1, audioContext.currentTime)
-                        .linearRampToValueAtTime( 0, audioContext.currentTime + 0.2 )
+                        .linearRampToValueAtTime( 0, audioContext.currentTime + 0.8 )
                 }
             } 
         })
@@ -195,7 +247,10 @@ export function Audio(){
     function getSynth( ctx ){
         if ( audioContext == undefined ) return
         if ( synth !== undefined ) return synth
-        const synth = instanciateModule( ctx, synthModel )
+        console.log( whiteNoiseBuffer( audioContext ) )
+        const synth = instanciateModule( ctx, synthModel, {
+            buffers : { 'whitenoise' : whiteNoiseBuffer( audioContext ) }
+        })
         synth.start()
         synth.connect( ctx.destination )
         return synth 

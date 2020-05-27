@@ -172,7 +172,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         stayOnGameOver : 70,
         stayOnReset : 50,
         maxTeamScore : 5,
-        minesCount : undefined,
+        minesCount : 50,
         // maxPlayers : 1
     })
     const gameStateFsm = Fsm([
