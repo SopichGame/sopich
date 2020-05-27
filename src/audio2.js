@@ -160,15 +160,17 @@ export function Audio(){
             //console.log('play', type, volume, 'at', distance, synth )
 
             let attenuation
-            // linear attenuation
-            const distanceThreshold1 = 200
-            const distanceThreshold2 = 800
-            if ( distance > distanceThreshold1 ){
-                const c = clamp( distance, distanceThreshold1, distanceThreshold2 ),
+            {
+                // linear attenuation
+                const distanceThreshold1 = 200
+                const distanceThreshold2 = 800
+                if ( distance > distanceThreshold1 ){
+                    const c = clamp( distance, distanceThreshold1, distanceThreshold2 ),
                       r = ( c - distanceThreshold1 ) / ( distanceThreshold2 - distanceThreshold1 )
-                attenuation = 1 - r
-            } else {
-                attenuation = 1
+                    attenuation = 1 - r
+                } else {
+                    attenuation = 1
+                }
             }
             const v = volume * attenuation
             
