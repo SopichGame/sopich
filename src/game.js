@@ -906,35 +906,35 @@ export function Game( { tellPlayer, // called with user centered world, each wor
     //createMine( 200,400, 1 )
 
     function resetMatch(){
-            const { Systems, Components, Items } = World
-            const playerInfos = []
-            Components.player.forEach( ([id,player]) => {
-                const member = Components.member.get( id )
-                // const color = Components.color.get( id )
-                playerInfos.push( { player, member /*, color */ } )
-                Items.remove( id )
-                console.log('-player', id, { player, member /*, color */ } )
-            })
-            
-            playerInfos.forEach( ({ player, member, color }) => {
-                const { name } = player
-                const { teamId } = member
-                //const { cs } = color
-                createAndPlacePlayer( { name, teamId, /* colorScheme : cs,*/ totalScore : 0, } )
-                console.log('+player', { player, member, color } )
-            })
-            
-            Systems.team.forEach( ( team, id ) => {
-                const score = Components.score.get( id )
-                if ( score ){
-                    score.total = 0
-                    console.log('reset score')
-                }
-                console.log('-team', id, { team }, Components.score.get( id ) )
-            })
+        const { Systems, Components, Items } = World
+        const playerInfos = []
+        Components.player.forEach( ([id,player]) => {
+            const member = Components.member.get( id )
+            // const color = Components.color.get( id )
+            playerInfos.push( { player, member /*, color */ } )
+            Items.remove( id )
+            console.log('-player', id, { player, member /*, color */ } )
+        })
+        
+        playerInfos.forEach( ({ player, member, color }) => {
+            const { name } = player
+            const { teamId } = member
+            //const { cs } = color
+            createAndPlacePlayer( { name, teamId, /* colorScheme : cs,*/ totalScore : 0, } )
+            console.log('+player', { player, member, color } )
+        })
+        
+        Systems.team.forEach( ( team, id ) => {
+            const score = Components.score.get( id )
+            if ( score ){
+                score.total = 0
+                console.log('reset score')
+            }
+            console.log('-team', id, { team }, Components.score.get( id ) )
+        })
 
-            
-           
+        
+        
         
     }
     function update(){
@@ -1022,20 +1022,20 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             _boundingboxes : [],
             _lastcolls : [],
             /*_dbg_snd : [{
-                id : 'bidon_0',
-                x : 10,
-                y : 10,
-                noise : {
-                    type : NOISE_NUM_BY_NAME['bomb-fired'],
-                    volume : 1
-                },
-            },{
-                id : 'bidon_1', x : 10, y : 10,
-                noise : {
-                    type : NOISE_NUM_BY_NAME['missile-fired'],
-                    volume : 1
-                },
-            }]*/
+              id : 'bidon_0',
+              x : 10,
+              y : 10,
+              noise : {
+              type : NOISE_NUM_BY_NAME['bomb-fired'],
+              volume : 1
+              },
+              },{
+              id : 'bidon_1', x : 10, y : 10,
+              noise : {
+              type : NOISE_NUM_BY_NAME['missile-fired'],
+              volume : 1
+              },
+              }]*/
         }
         if ( !DEBUG_BOUNDING_BOXES ){
             delete categ._boundingboxes
@@ -1099,7 +1099,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                   didTakeDamage = Systems.health.didTakeDamage( id ),
                   member = Components.member.get( id ),
                   noise = Components.noise.get( id )
-                  
+            
             let teamName = undefined,
                 teamColorScheme = undefined
 
@@ -1363,7 +1363,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             console.log('GAME FULL',name)
             return ADD_PLAYER_RETURNS.NO_MORE_AVAILABLE_ITEM            
         }
-             
+        
         let teamId = undefined
         {            
             const smallest = { size : undefined, id : undefined }
@@ -1382,10 +1382,10 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         console.log({isPlacer})
         
         
-            createAndPlacePlayer( { name, totalScore : 0, teamId } )
-            //createPlayer( name, score )
-            // dbgItems()
-            return ADD_PLAYER_RETURNS.OK
+        createAndPlacePlayer( { name, totalScore : 0, teamId } )
+        //createPlayer( name, score )
+        // dbgItems()
+        return ADD_PLAYER_RETURNS.OK
         
     }
     function removePlayer( name ){
