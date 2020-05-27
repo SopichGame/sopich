@@ -52,8 +52,8 @@ function LeaderBoardDisplay(){
         display()
         $div.style.visibility = 'visible'
     }
-    function update( leaderboard ){
-        
+    function update( leaderboard = []){
+
         let width1 = clamp(leaderboard.reduce(
             (r,{username}) => Math.max( r, username.length ),
             0
