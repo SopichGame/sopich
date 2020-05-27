@@ -1,4 +1,3 @@
-
 // ia
 // - masks
 // game end/start
@@ -123,6 +122,16 @@ export const HEIGHTMAP_TYPE = {
 export const ATTACK_TYPE = {
     'collision' : 0,
 }
+const NOISE_TYPES = [ 'missile-fired', 'bomb-fired', 'death', 'damage' ]
+export const NOISE_NUM_BY_NAME = NOISE_TYPES.reduce( (r,x,i) => {
+    r[ x ] = i
+    return r
+}, {})
+export const NOISE_NAME_BY_NUM = NOISE_TYPES.reduce( (r,x,i) => {
+    r[ i ] = x
+    return r
+}, {})
+
 import { OptionsParser } from './gameoptions.js'
 
 const Definitions = {
@@ -290,6 +299,8 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         }, options ))
         return radarId
     }
+    
+    
     const Models = {
         test : Items.create( {} ),
         missile : Items.create( {
@@ -302,12 +313,13 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                     mask : 0xffff
                 },
                 attack : { collision : 5 },
-                direction : {}, // copy
-                position : {}, // copy
                 speed : { pps : undefined, min : 14, max : 14 }, // copy  pps : pps, max : 10, min : 0 },
                 worldbounds : { die : true },
                 health : { life  : 1, maxLife : 1 },
-                color : {} // copy
+                noise : { type : NOISE_NUM_BY_NAME[ 'missile-fired' ], volume : 1 },
+                direction : {}, // copy
+                position : {}, // copy
+                color : {}, // copy,
             } }
         } ),
         bomb : Items.create( {
@@ -325,6 +337,8 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 position : {}, // copy
                 speed : { pps : undefined, min : 1, max : 4 }, // copy  pps : pps, max : 10, min : 0 },
                 worldbounds : { die : true },
+                noise : { type : NOISE_NUM_BY_NAME[ 'bomb-fired' ], volume : 1 },
+
                 health : { life  : 1, maxLife : 1 },
                 color : {} // copy
             } }
@@ -1006,7 +1020,22 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             bonuses : [],
             sprites : [],
             _boundingboxes : [],
-            _lastcolls : []
+            _lastcolls : [],
+            /*_dbg_snd : [{
+                id : 'bidon_0',
+                x : 10,
+                y : 10,
+                noise : {
+                    type : NOISE_NUM_BY_NAME['bomb-fired'],
+                    volume : 1
+                },
+            },{
+                id : 'bidon_1', x : 10, y : 10,
+                noise : {
+                    type : NOISE_NUM_BY_NAME['missile-fired'],
+                    volume : 1
+                },
+            }]*/
         }
         if ( !DEBUG_BOUNDING_BOXES ){
             delete categ._boundingboxes
@@ -1068,8 +1097,9 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                   placement = Components.placement.get( id ),
                   health = Components.health.get( id ),
                   didTakeDamage = Systems.health.didTakeDamage( id ),
-                  member = Components.member.get( id )
-
+                  member = Components.member.get( id ),
+                  noise = Components.noise.get( id )
+                  
             let teamName = undefined,
                 teamColorScheme = undefined
 
@@ -1264,6 +1294,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                         y : position.y,
                         sprt : sprite.type,
                         cs : (color)?(color.cs):0,
+                        noise,
                     })
                 } else  if ( ( sprite.type === SpriteTypeNum['bomb'] ) && direction  ) {
                     
@@ -1280,7 +1311,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                         x : position.x,
                         y : position.y,
                         sprt : sprite.type,
-                        cs : (color)?(color.cs):0,
+                        cs : (color)?(color.cs):0,    noise,
                     })
                 }
             }

@@ -1,5 +1,5 @@
 import { Display } from '../../../src/display.js'
-import { Audio } from '../../../src/audio.js'
+import { Audio } from '../../../src/audio2.js'
 
 import { debounce } from 'throttle-debounce';
 import { getCurrentState } from './state';

@@ -1,4 +1,4 @@
-export function waitAudioContext( checkInterval = 500 ){
+export function waitAudioContext( checkInterval = 2000 ){
 
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     

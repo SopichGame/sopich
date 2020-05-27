@@ -307,7 +307,21 @@ export function mkSystems( W ){
                 // }
             }
         })(),
-        
+        ( () => {
+            return {
+                name : 'noise',
+                onStep : () => {
+                    // remove all noise components
+                    const remove = []
+                    W.Components.noise.forEach( ([id]) => {
+                        remove.push( id )
+                    })
+                    remove.forEach( id => {
+                        W.Items.change( id, { noise : false } )
+                    })
+                }
+            }
+        })(),
         ( () => {
             return {
                 name : 'animation',

@@ -163,12 +163,16 @@ export function mkComponents(){
                 nobounce, die, noclamp
             })
         }),
-        owned :  cmpStrg( {
+        owned : cmpStrg( {
             copy : ( { ownerId } ) => ( {
                 ownerId
             })
         }),
-        
+        noise : cmpStrg( {
+            copy : ( { type, volume } ) => ( {
+                type, volume
+            })
+        }),     
 
     }
     return byName
