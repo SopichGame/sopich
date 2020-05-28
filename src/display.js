@@ -696,6 +696,12 @@ export function Display() {
                     let { x, y } = bomb                
                     let wxy = world_to_context( x, y )
                     putSprite( getImage( bomb.sprt, bomb ), wxy.x , wxy.y )
+                    if ( bomb.lf <= 0 ){
+                        trailPoints.add( x, y,  TrailColors.falling1, 3, 2 )
+                    }
+                    if ( bomb.dmg ){
+                        trailPoints.add( x, y,  TrailColors.debris, 4, 2 )
+                    }
                 }
             }
 
@@ -707,6 +713,14 @@ export function Display() {
                     let wxy = world_to_context( x, y )
                     putSprite( getImage( missile.sprt, missile ), wxy.x , wxy.y )
                     trailPoints.add( x, y, TrailColors.missiles, 2, 1 )
+
+                    if ( missile.lf <= 0 ){
+                        trailPoints.add( x, y,  TrailColors.falling1, 3, 2 )
+                    }
+                    if ( missile.dmg ){
+                        trailPoints.add( x, y,  TrailColors.debris, 4, 2 )
+                    }
+                    
                 }
             }
             

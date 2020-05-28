@@ -996,8 +996,15 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                     const sprite = Components.sprite.get( id )
                     if ( sprite ){
                         if (( sprite.type === SpriteTypeNum['missile'] )
-                            || ( sprite.type === SpriteTypeNum['bomb'] ) )
-                            Items.remove( id )
+                            || ( sprite.type === SpriteTypeNum['bomb'] ) ){
+                            Items.change( id, {
+                                //collision : false,
+                                speed : false
+                                //bb : false
+                            })
+                            Events.wait( 1, () => Items.remove( id ) )
+                        }
+                        //Items.remove( id )
                     }
                 }
             }
@@ -1318,6 +1325,13 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                         cs : (color)?(color.cs):0,
                         noise,
                     })
+                    if ( health ){
+                        categ.missiles[ categ.missiles.length - 1].lf = health.life
+                    }
+                    if ( didTakeDamage ){
+                        categ.missiles[ categ.missiles.length - 1].dmg = 1
+                    }
+
                 } else  if ( ( sprite.type === SpriteTypeNum['bomb'] ) && direction  ) {
                     
                     let a16 = 0
@@ -1335,6 +1349,13 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                         sprt : sprite.type,
                         cs : (color)?(color.cs):0,    noise,
                     })
+                    if ( health ){
+                        categ.bombs[ categ.bombs.length - 1].lf = health.life
+                    }
+                    if ( didTakeDamage ){
+                        categ.bombs[ categ.bombs.length - 1].dmg = 1
+                    }
+                    
                 }
             }
             
