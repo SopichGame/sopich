@@ -905,12 +905,12 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         }
 
         Events.wait( 1 * 10, () => addPlayer( { name : 'cipiu1', score : 0, cipiu : true } ) )
-/*        Events.wait( 2 * 10, () => addPlayer( { name : 'cipiu2', score : 0, cipiu : true } ) )   
-        Events.wait( 3 * 10, () => addPlayer( { name : 'cipiu3', score : 0, cipiu : true } ) )
-        Events.wait( 4 * 10, () => addPlayer( { name : 'cipiu4', score : 0, cipiu : true } ) )
-        Events.wait( 5 * 10, () => addPlayer( { name : 'cipiu5', score : 0, cipiu : true } ) )
-        Events.wait( 6 * 10, () => addPlayer( { name : 'cipiu6', score : 0, cipiu : true } ) )
-*/
+        /*        Events.wait( 2 * 10, () => addPlayer( { name : 'cipiu2', score : 0, cipiu : true } ) )   
+                  Events.wait( 3 * 10, () => addPlayer( { name : 'cipiu3', score : 0, cipiu : true } ) )
+                  Events.wait( 4 * 10, () => addPlayer( { name : 'cipiu4', score : 0, cipiu : true } ) )
+                  Events.wait( 5 * 10, () => addPlayer( { name : 'cipiu5', score : 0, cipiu : true } ) )
+                  Events.wait( 6 * 10, () => addPlayer( { name : 'cipiu6', score : 0, cipiu : true } ) )
+        */
     }
     iii()
     //createMine( 400,300, 0 )
@@ -1175,81 +1175,85 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 })
             }
             const obj = { id }
-            categ.sprites.push( obj )
-            if ( position !== undefined ){
-                const { x, y } = position
-                Object.assign( obj, { x, y } )
-            }
-            if ( color !== undefined ){
-                const { cs } = color
-                Object.assign( obj, { cs } )
-            }
-            if ( sprite !== undefined ){
-                const { type, subtypes } = sprite
-                Object.assign( obj, { sprt : type } )
-                if ( subtypes !== undefined ){
-                    const { bt, dt, tt } = subtypes 
-                    if ( bt !== undefined ){
-                        Object.assign( obj, { bt } )
-                    }
-                    if ( dt !== undefined ){
-                        Object.assign( obj, { dt } )
-                    }
-                    if ( tt !== undefined ){
-                        Object.assign( obj, { tt } )
-                    }
-                }
-                if ( animation !== undefined ){
-                    const { step } = animation
-                    Object.assign( obj, { as : step || 0 } )
-                } else {
-                    Object.assign( obj, { as : 0 } )
-                }
-                
-                if ( direction !== undefined ){
-                    let { a8, a16 } = direction
-                    if ( a16 !== undefined ){
-                        //a16 = direction.a16
-                    } else if ( a8 !== undefined ){
-                        a16 = a8 * 2 
-                    }
-                    if ( a16 !== undefined ){
-                        a8 = Math.floor( a16 / 2 )
-                        Object.assign( obj, { a8, a16 } )
-                    }
-                }
-                if ( r !== undefined ){
-                    Object.assign( obj, { r : r.r } )
-                }
-            }
-            if ( player !== undefined ){
-                const { name } = player
-                Object.assign( obj, { name } )
-            }
-            if ( teamName !== undefined ){
-                Object.assign( obj, { teamName } )
-            }
-            if ( teamColorScheme !== undefined ){
-                Object.assign( obj, { teamColorScheme } )
-            }
-            if ( health ){
-                const { life } = health
-                Object.assign( obj, { lf : life } )
-            }
-            if ( didTakeDamage ){
-                Object.assign( obj, { dmg : 1 } )
-            }
+            
+            if ( position !== undefined ){ categ.sprites.push( obj )
+                                           const { x, y } = position
+                                           Object.assign( obj, { x, y } )
+                                           
+                                           if ( color !== undefined ){
+                                               const { cs } = color
+                                               Object.assign( obj, { cs } )
+                                           }
+                                           if ( sprite !== undefined ){
+                                               const { type, subtypes } = sprite
+                                               Object.assign( obj, { sprt : type } )
+                                               if ( subtypes !== undefined ){
+                                                   const { bt, dt, tt } = subtypes 
+                                                   if ( bt !== undefined ){
+                                                       Object.assign( obj, { bt } )
+                                                   }
+                                                   if ( dt !== undefined ){
+                                                       Object.assign( obj, { dt } )
+                                                   }
+                                                   if ( tt !== undefined ){
+                                                       Object.assign( obj, { tt } )
+                                                   }
+                                               }
+                                               if ( animation !== undefined ){
+                                                   const { step } = animation
+                                                   Object.assign( obj, { as : step || 0 } )
+                                               } else {
+                                                   Object.assign( obj, { as : 0 } )
+                                               }
+                                               
+                                               if ( direction !== undefined ){
+                                                   let { a8, a16 } = direction
+                                                   if ( a16 !== undefined ){
+                                                       //a16 = direction.a16
+                                                   } else if ( a8 !== undefined ){
+                                                       a16 = a8 * 2 
+                                                   }
+                                                   if ( a16 !== undefined ){
+                                                       a8 = Math.floor( a16 / 2 )
+                                                       Object.assign( obj, { a8, a16 } )
+                                                   }
+                                               }
+                                               if ( r !== undefined ){
+                                                   Object.assign( obj, { r : r.r } )
+                                               }
+                                           }
+                                           if ( player !== undefined ){
+                                               const { name } = player
+                                               Object.assign( obj, { name } )
+                                           }
+                                           if ( teamName !== undefined ){
+                                               Object.assign( obj, { teamName } )
+                                           }
+                                           if ( teamColorScheme !== undefined ){
+                                               Object.assign( obj, { teamColorScheme } )
+                                           }
+                                           if ( health ){
+                                               const { life } = health
+                                               Object.assign( obj, { lf : life } )
+                                           }
+                                           if ( didTakeDamage ){
+                                               Object.assign( obj, { dmg : 1 } )
+                                           }
+                                           if ( noise ){
+                                               Object.assign( obj, { noise} )
+                                           }
+                                         }
             //             teamName,
             //             teamColorScheme,
-                    //a16 : direction.a16,
-                //                 r : ((r)?(r.r):0),
+            //a16 : direction.a16,
+            //                 r : ((r)?(r.r):0),
 
-                
+            
             //             sprt : sprite.type,
             //             as : ( animation && animation.step )?(animation.step):0,
             //             cs : (color)?(color.cs):0,
             //             bt : (sprite.subtypes)?(sprite.subtypes.bt):0
-                
+            
             //}
 
             // if ( sprite && position ){
@@ -1349,7 +1353,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             //         })
             //         __idx++
             //     } else  if ( ( sprite.type === SpriteTypeNum['plane'] ) && direction && player ) {
-                    
+            
             //         categ.planes.push({
             //             id,
             //             name : player.name,
@@ -1410,7 +1414,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             //         }
 
             //     } else  if ( ( sprite.type === SpriteTypeNum['bomb'] ) && direction  ) {
-                    
+            
             //         let a16 = 0
             //         if ( a16 !== undefined ){
             //             a16 = direction.a16
@@ -1432,12 +1436,12 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             //         if ( didTakeDamage ){
             //             categ.bombs[ categ.bombs.length - 1].dmg = 1
             //         }
-                    
-        //}
-                     
+            
+            //}
             
             
-                     })
+            
+        })
         const commonUpdate = Object.assign(
             categ, {
                 t : Date.now(),
