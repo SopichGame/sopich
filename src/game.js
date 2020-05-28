@@ -43,7 +43,7 @@ export const worldSize = {
     x1 : 0,
     x2 : 2500,
     y1 : 0,
-    y2 : 800,
+    y2 : 8000,
     w : 2500,
     h : 800
 }
@@ -1176,73 +1176,74 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             }
             const obj = { id }
             
-            if ( position !== undefined ){ categ.sprites.push( obj )
-                                           const { x, y } = position
-                                           Object.assign( obj, { x, y } )
-                                           
-                                           if ( color !== undefined ){
-                                               const { cs } = color
-                                               Object.assign( obj, { cs } )
-                                           }
-                                           if ( sprite !== undefined ){
-                                               const { type, subtypes } = sprite
-                                               Object.assign( obj, { sprt : type } )
-                                               if ( subtypes !== undefined ){
-                                                   const { bt, dt, tt } = subtypes 
-                                                   if ( bt !== undefined ){
-                                                       Object.assign( obj, { bt } )
-                                                   }
-                                                   if ( dt !== undefined ){
-                                                       Object.assign( obj, { dt } )
-                                                   }
-                                                   if ( tt !== undefined ){
-                                                       Object.assign( obj, { tt } )
-                                                   }
-                                               }
-                                               if ( animation !== undefined ){
-                                                   const { step } = animation
-                                                   Object.assign( obj, { as : step || 0 } )
-                                               } else {
-                                                   Object.assign( obj, { as : 0 } )
-                                               }
-                                               
-                                               if ( direction !== undefined ){
-                                                   let { a8, a16 } = direction
-                                                   if ( a16 !== undefined ){
-                                                       //a16 = direction.a16
-                                                   } else if ( a8 !== undefined ){
-                                                       a16 = a8 * 2 
-                                                   }
-                                                   if ( a16 !== undefined ){
-                                                       a8 = Math.floor( a16 / 2 )
-                                                       Object.assign( obj, { a8, a16 } )
-                                                   }
-                                               }
-                                               if ( r !== undefined ){
-                                                   Object.assign( obj, { r : r.r } )
-                                               }
-                                           }
-                                           if ( player !== undefined ){
-                                               const { name } = player
-                                               Object.assign( obj, { name } )
-                                           }
-                                           if ( teamName !== undefined ){
-                                               Object.assign( obj, { teamName } )
-                                           }
-                                           if ( teamColorScheme !== undefined ){
-                                               Object.assign( obj, { teamColorScheme } )
-                                           }
-                                           if ( health ){
-                                               const { life } = health
-                                               Object.assign( obj, { lf : life } )
-                                           }
-                                           if ( didTakeDamage ){
-                                               Object.assign( obj, { dmg : 1 } )
-                                           }
-                                           if ( noise ){
-                                               Object.assign( obj, { noise} )
-                                           }
-                                         }
+            if ( position !== undefined ){
+                categ.sprites.push( obj )
+                const { x, y } = position
+                Object.assign( obj, { x, y } )
+                
+                if ( color !== undefined ){
+                    const { cs } = color
+                    Object.assign( obj, { cs } )
+                }
+                if ( sprite !== undefined ){
+                    const { type, subtypes } = sprite
+                    Object.assign( obj, { sprt : type } )
+                    if ( subtypes !== undefined ){
+                        const { bt, dt, tt } = subtypes 
+                        if ( bt !== undefined ){
+                            Object.assign( obj, { bt } )
+                        }
+                        if ( dt !== undefined ){
+                            Object.assign( obj, { dt } )
+                        }
+                        if ( tt !== undefined ){
+                            Object.assign( obj, { tt } )
+                        }
+                    }
+                    if ( animation !== undefined ){
+                        const { step } = animation
+                        Object.assign( obj, { as : step || 0 } )
+                    } else {
+                        Object.assign( obj, { as : 0 } )
+                    }
+                    
+                    if ( direction !== undefined ){
+                        let { a8, a16 } = direction
+                        if ( a16 !== undefined ){
+                            //a16 = direction.a16
+                        } else if ( a8 !== undefined ){
+                            a16 = a8 * 2 
+                        }
+                        if ( a16 !== undefined ){
+                            a8 = Math.floor( a16 / 2 )
+                            Object.assign( obj, { a8, a16 } )
+                        }
+                    }
+                    if ( r !== undefined ){
+                        Object.assign( obj, { r : r.r } )
+                    }
+                }
+                if ( player !== undefined ){
+                    const { name } = player
+                    Object.assign( obj, { name } )
+                }
+                if ( teamName !== undefined ){
+                    Object.assign( obj, { teamName } )
+                }
+                if ( teamColorScheme !== undefined ){
+                    Object.assign( obj, { teamColorScheme } )
+                }
+                if ( health ){
+                    const { life } = health
+                    Object.assign( obj, { lf : life } )
+                }
+                if ( didTakeDamage ){
+                    Object.assign( obj, { dmg : 1 } )
+                }
+                if ( noise ){
+                    Object.assign( obj, { noise} )
+                }
+            }
             //             teamName,
             //             teamColorScheme,
             //a16 : direction.a16,

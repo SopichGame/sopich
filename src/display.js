@@ -553,85 +553,85 @@ export function Display() {
             }
         }
         //if ( true){
-            const sprites = State.sprites
-            if ( sprites ) {
-                for ( let i = 0, l = sprites.length ; i < l ; i++ ){                
-                    const sprite = sprites[ i ]
-                    const { x, y } = sprite
-                    let wxy = world_to_context( x, y )
-                    if ( sprite.sprt !== undefined ){
-                        try {
-                            putSprite( getImage( sprite.sprt, sprite ), wxy.x , wxy.y )
-                        } catch ( e ){
-                            console.error('bad sprite', sprite )
-                        }
+        const sprites = State.sprites
+        if ( sprites ) {
+            for ( let i = 0, l = sprites.length ; i < l ; i++ ){                
+                const sprite = sprites[ i ]
+                const { x, y } = sprite
+                let wxy = world_to_context( x, y )
+                if ( sprite.sprt !== undefined ){
+                    try {
+                        putSprite( getImage( sprite.sprt, sprite ), wxy.x , wxy.y )
+                    } catch ( e ){
+                        console.error('bad sprite', sprite )
                     }
-                    const isCameraTarget = ( cameraTarget && ( cameraTarget.id === sprite.id ) )
-                    if ( showPositionHelper &&  isCameraTarget ){
-                        const r = positionHelperShowRatio
-                        if ( r > 0.5 ){
-                            $context.beginPath()
-                            $context.strokeStyle = `rgba(255,255,128,${ 0.5 * r })`
-                            $context.lineWidth = 16 * r
-                            $context.arc( wxy.x, wxy.y, r * 64, 0, 2 * Math.PI )
-                            $context.stroke()
-                            $context.closePath()
-                        }
-                    }
-                    
-                    if ( ( sprite.lf !== undefined ) && ( sprite.lf <= 0 ) ){
-                        trailPoints.add( x, y,  TrailColors.falling1, 3, 2 )
-                    }
-                    if ( ( sprite.dmg !== undefined ) && ( sprite.dmg ) ){
-                        trailPoints.add( x, y,  TrailColors.debris, 4, 2 )
-                    }
-                    if ( sprite.sprt === SpriteTypeNum['missile'] ){
-                        trailPoints.add( x, y, TrailColors.missiles, 2, 1 )
-                    }
-                    if ( sprite.sprt === SpriteTypeNum['bomb'] ){
-
-                    }
-                    // bomb
-                    ///trailPoints.add( x, y,  TrailColors.falling1, 3, 2 )
-                    //trailPoints.add( x, y,  TrailColors.debris, 4, 2 )
-
-                    
-                    
-                    function printName( cs = 0 ){
-                        if ( !( sprite.teamName || sprite.name ) )
-                            return
-                        $context.beginPath()
-                        let col = ColorSchemes[cs][1]
-                        let rgb = /*( human === true )?*/ `rgb(${col[0]},${col[1]},${col[2]})`/*:'gray'*/
-                        $context.fillStyle = rgb
-                        
-                        
-                        $context.font = `${ 10 }px monospace`;
-
-                        const inScreen = ( wxy.x >= 0 ) && ( wxy.x <= $canvas.width )
-                              && ( wxy.y >= 0 ) && ( wxy.y <= $canvas.height )
-                        
-                        const displayString = sprite.teamName
-                            ?(`[${ sprite.teamName.slice(0,1) }]${ sprite.name }`  )
-                            :(`${ sprite.name }`)
-                        // ${ human?'human':'💻' } ${ inScreen?'yes':'no'}`
-
-                        if ( true || inScreen || (human === true) ){
-                            
-                            const canvasClamped = {
-                                x : clamp( wxy.x, 0, $canvas.width - 7 * ( displayString.length + 1 ) ),
-                                y : clamp( wxy.y, 0, $canvas.height - 22 )
-                            }
-                            $context.fillText(displayString,
-                                              canvasClamped.x + 8,
-                                              canvasClamped.y + 18)
-                            
-                        }
-                    }
-                    printName()
                 }
+                const isCameraTarget = ( cameraTarget && ( cameraTarget.id === sprite.id ) )
+                if ( showPositionHelper &&  isCameraTarget ){
+                    const r = positionHelperShowRatio
+                    if ( r > 0.5 ){
+                        $context.beginPath()
+                        $context.strokeStyle = `rgba(255,255,128,${ 0.5 * r })`
+                        $context.lineWidth = 16 * r
+                        $context.arc( wxy.x, wxy.y, r * 64, 0, 2 * Math.PI )
+                        $context.stroke()
+                        $context.closePath()
+                    }
+                }
+                
+                if ( ( sprite.lf !== undefined ) && ( sprite.lf <= 0 ) ){
+                    trailPoints.add( x, y,  TrailColors.falling1, 3, 2 )
+                }
+                if ( ( sprite.dmg !== undefined ) && ( sprite.dmg ) ){
+                    trailPoints.add( x, y,  TrailColors.debris, 4, 2 )
+                }
+                if ( sprite.sprt === SpriteTypeNum['missile'] ){
+                    trailPoints.add( x, y, TrailColors.missiles, 2, 1 )
+                }
+                if ( sprite.sprt === SpriteTypeNum['bomb'] ){
+
+                }
+                // bomb
+                ///trailPoints.add( x, y,  TrailColors.falling1, 3, 2 )
+                //trailPoints.add( x, y,  TrailColors.debris, 4, 2 )
+
+                
+                
+                function printName( cs = 0 ){
+                    if ( !( sprite.teamName || sprite.name ) )
+                        return
+                    $context.beginPath()
+                    let col = ColorSchemes[cs][1]
+                    let rgb = /*( human === true )?*/ `rgb(${col[0]},${col[1]},${col[2]})`/*:'gray'*/
+                    $context.fillStyle = rgb
+                    
+                    
+                    $context.font = `${ 10 }px monospace`;
+
+                    const inScreen = ( wxy.x >= 0 ) && ( wxy.x <= $canvas.width )
+                          && ( wxy.y >= 0 ) && ( wxy.y <= $canvas.height )
+                    
+                    const displayString = sprite.teamName
+                        ?(`[${ sprite.teamName.slice(0,1) }]${ sprite.name }`  )
+                        :(`${ sprite.name }`)
+                    // ${ human?'human':'💻' } ${ inScreen?'yes':'no'}`
+
+                    if ( true || inScreen || (human === true) ){
+                        
+                        const canvasClamped = {
+                            x : clamp( wxy.x, 0, $canvas.width - 7 * ( displayString.length + 1 ) ),
+                            y : clamp( wxy.y, 0, $canvas.height - 22 )
+                        }
+                        $context.fillText(displayString,
+                                          canvasClamped.x + 8,
+                                          canvasClamped.y + 18)
+                        
+                    }
+                }
+                printName()
             }
-    //} else {
+        }
+        //} else {
 
         //     const targets = State.targets
         //     if ( targets ) {
@@ -641,7 +641,7 @@ export function Display() {
         //             const { x, y, as, broken } = target
         //             let wxy = world_to_context( x, y )
         //             putSprite( getImage( target.sprt, target ), wxy.x , wxy.y )
-                    
+        
         //             /*
         //             //if ( ttl > 0 ){
         //             if ( broken ){
@@ -657,7 +657,7 @@ export function Display() {
         //         State.planes.forEach( (plane) => {
         //             const { human, reckless, age, ttl, x, y, r, a, p, cs, score, value,  name } = plane,
         //                   wxy = world_to_context( x, y )
-                    
+        
         //             const isCameraTarget = ( cameraTarget && ( cameraTarget.id === plane.id ) )
         //             if ( showPositionHelper &&  isCameraTarget ){
         //                 const r = positionHelperShowRatio
@@ -670,7 +670,7 @@ export function Display() {
         //                     $context.closePath()
         //                 }
         //             }
-                    
+        
         //             if ( plane.lf <= 0 ){
         //                 trailPoints.add( x, y,  TrailColors.falling1, 3, 2 )
         //             }
@@ -695,20 +695,20 @@ export function Display() {
         //                 putSprite( img, wxy.x  , wxy.y )
 
         //                 // drawWorldRectangle( x,y, img.width, img.height, 'red' )
-                        
+        
         //             }
         //             function printName(){
         //                 $context.beginPath()
         //                 let col = ColorSchemes[cs][1]
         //                 let rgb = /*( human === true )?*/ `rgb(${col[0]},${col[1]},${col[2]})`/*:'gray'*/
         //                 $context.fillStyle = rgb
-                        
-                        
+        
+        
         //                 $context.font = `${ 10  }px monospace`;
 
         //                 const inScreen = ( wxy.x >= 0 ) && ( wxy.x <= $canvas.width )
         //                       && ( wxy.y >= 0 ) && ( wxy.y <= $canvas.height )
-                        
+        
         //                 //                    const displayString = `${ name } ${ score.total } ${ value }`// ${ human?'human':'💻' } ${ inScreen?'yes':'no'}`
         //                 const displayString = plane.teamName
         //                     ?(`[${ plane.teamName.slice(0,1) }]${ name }`  )
@@ -716,7 +716,7 @@ export function Display() {
         //                 // ${ human?'human':'💻' } ${ inScreen?'yes':'no'}`
 
         //                 if ( true || inScreen || (human === true) ){
-                            
+        
         //                     const canvasClamped = {
         //                         x : clamp( wxy.x, 0, $canvas.width - 7 * ( displayString.length + 1 ) ),
         //                         y : clamp( wxy.y, 0, $canvas.height - 22 )
@@ -734,13 +734,13 @@ export function Display() {
         //                       $context.fillText(`${ name }(${p})${score.total}/${value}`,
         //                       wxy.x + 8 , wxy.y + 18 )
         //                     */
-                            
+        
         //                     /*$context.fillText(`${score.total}`,
         //                       wxy.x + 8 , wxy.y + 18 )
         //                     */
         //                     /*context.fillText(`${ name }`,
         //                       wxy.x + 8 , wxy.y + 18 )*/
-                            
+        
         //                     //}
         //                 }
         //             }
@@ -749,15 +749,15 @@ export function Display() {
         //             //trailPoints.add( x, y, TrailColors.missiles, 2, 1 )
 
         //             //}
-                    
+        
         //             /*
-                      
+        
         //               $context.fillText(`${ name }`,// ${Math.floor(x)},${Math.floor(y)},${p}`,
         //               wxy.x + 8 , wxy.y + 18 )
         //             */
         //         })
         //     }        
-            
+        
         //     const bombs = State.bombs
         //     if ( bombs ) {
         //         for ( let i = 0, l = bombs.length ; i < l ; i++ ){
@@ -789,10 +789,10 @@ export function Display() {
         //             if ( missile.dmg ){
         //                 trailPoints.add( x, y,  TrailColors.debris, 4, 2 )
         //             }
-                    
+        
         //         }
         //     }
-            
+        
         //     const guidedmissiles = State.guidedmissiles
         //     if ( guidedmissiles ) {
         //         for ( let i = 0, l = guidedmissiles.length ; i < l ; i++ ){
