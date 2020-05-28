@@ -43,7 +43,7 @@ export const worldSize = {
     x1 : 0,
     x2 : 2500,
     y1 : 0,
-    y2 : 8000,
+    y2 : 2000,
     w : 2500,
     h : 800
 }
