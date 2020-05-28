@@ -23,7 +23,7 @@ export const DEBUG_BOUNDING_BOXES = false
 import { symbFilterProps,  TARGETS_TYPE, DEBRIS_TYPE_COUNT } from './symbols.js'
 // import { Tree, CONTINUE_VISIT, STOP_VISIT } from './coll.js'
 import { clamp, posmod } from './utils.js'
-//import { rectangle_intersection, rectangle_intersection_bool } from './rect.js'
+//import { rectangle_intersecstion, rectangle_intersection_bool } from './rect.js'
 import { ColorSchemes, SpriteTypeNum, SpriteInfosByTypeNum } from './symbols.js'
 import { bonusessym12 } from './art/pixel12.js'
 import { NameGenerator } from './misc/namegenerator.js'
@@ -227,7 +227,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                         repeatCount : playlist.length - 1 }
         } )
         Items.change( id, {
-            animation : { timeoutId : animationTo, playlist }
+            animation : { timeoutId : animationTo, playlist, step : 0 }
         })
         Events.wait( animationLength + extraDelay, () => {
             Items.remove( id )
@@ -547,7 +547,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             bb : {},
             direction : { a16 : 12 }, // { x : undefined , y : undefined }
             speed : { pps : 1, min : 0, max : 3 },
-            color : { cs : 3 },
+            color : { cs :  1 },
             health : { life : 5, maxLife : 10 },
             attack : { collision : 2 },
 
@@ -561,7 +561,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             collision : { pixel : true,
                           category : COLLISION_CATEGORY.balloon,
                           mask : COLLISION_CATEGORY_ALL^(COLLISION_CATEGORY.balloon|COLLISION_CATEGORY.basket) },
-            color : { },
+            color : { cs : 4 },
             bb : {},
             health : { life : 5, maxLife : 10 },
             attack : { collision : 1 },
@@ -1174,6 +1174,83 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                     ... heightmap ,
                 })
             }
+            const obj = { id }
+            categ.sprites.push( obj )
+            if ( position !== undefined ){
+                const { x, y } = position
+                Object.assign( obj, { x, y } )
+            }
+            if ( color !== undefined ){
+                const { cs } = color
+                Object.assign( obj, { cs } )
+            }
+            if ( sprite !== undefined ){
+                const { type, subtypes } = sprite
+                Object.assign( obj, { sprt : type } )
+                if ( subtypes !== undefined ){
+                    const { bt, dt, tt } = subtypes 
+                    if ( bt !== undefined ){
+                        Object.assign( obj, { bt } )
+                    }
+                    if ( dt !== undefined ){
+                        Object.assign( obj, { dt } )
+                    }
+                    if ( tt !== undefined ){
+                        Object.assign( obj, { tt } )
+                    }
+                }
+                if ( animation !== undefined ){
+                    const { step } = animation
+                    Object.assign( obj, { as : step || 0 } )
+                } else {
+                    Object.assign( obj, { as : 0 } )
+                }
+                
+                if ( direction !== undefined ){
+                    let { a8, a16 } = direction
+                    if ( a16 !== undefined ){
+                        //a16 = direction.a16
+                    } else if ( a8 !== undefined ){
+                        a16 = a8 * 2 
+                    }
+                    if ( a16 !== undefined ){
+                        a8 = Math.floor( a16 / 2 )
+                        Object.assign( obj, { a8, a16 } )
+                    }
+                }
+                if ( r !== undefined ){
+                    Object.assign( obj, { r : r.r } )
+                }
+            }
+            if ( player !== undefined ){
+                const { name } = player
+                Object.assign( obj, { name } )
+            }
+            if ( teamName !== undefined ){
+                Object.assign( obj, { teamName } )
+            }
+            if ( teamColorScheme !== undefined ){
+                Object.assign( obj, { teamColorScheme } )
+            }
+            if ( health ){
+                const { life } = health
+                Object.assign( obj, { lf : life } )
+            }
+            if ( didTakeDamage ){
+                Object.assign( obj, { dmg : 1 } )
+            }
+            //             teamName,
+            //             teamColorScheme,
+                    //a16 : direction.a16,
+                //                 r : ((r)?(r.r):0),
+
+                
+            //             sprt : sprite.type,
+            //             as : ( animation && animation.step )?(animation.step):0,
+            //             cs : (color)?(color.cs):0,
+            //             bt : (sprite.subtypes)?(sprite.subtypes.bt):0
+                
+            //}
 
             // if ( sprite && position ){
             
@@ -1207,160 +1284,160 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             
             // }
             
-            if ( sprite && position ) {
-                if  ( ( sprite.type === SpriteTypeNum['bonuses'] )  ) {
-                    categ.bonuses.push({
-                        id,
-                        x : position.x,
-                        y : position.y,
-                        sprt : sprite.type,
-                        as : ( animation && animation.step )?(animation.step):0,
-                        cs : (color)?(color.cs):0,
-                        bt : (sprite.subtypes)?(sprite.subtypes.bt):0
-                    })
-                } else if  ( ( sprite.type === SpriteTypeNum['balloon'] )  ) {
-                    categ.balloons.push({
-                        id,
-                        x : position.x,
-                        y : position.y,
-                        sprt : sprite.type,
-                        cs : (color)?(color.cs || 0):0,
-                        as : ( animation && animation.step )?(animation.step):0,
-                    })
-                } else if  ( ( sprite.type === SpriteTypeNum['basket'] )  ) {
-                    categ.balloons.push({
-                        id,
-                        x : position.x,
-                        y : position.y, 
-                        sprt : sprite.type,
-                        cs : (color)?(color.cs || 0):0,                        
-                        as : ( animation && animation.step )?(animation.step):0,
-                    })
-                } else if  ( ( sprite.type === SpriteTypeNum['ox'] )  ) {
-                    categ.oxs.push({
-                        id,
-                        x : position.x,
-                        y : position.y, 
-                        sprt : sprite.type,
-                        as : ( animation && animation.step )?(animation.step):0,
-                    })
-                } else if  ( ( sprite.type === SpriteTypeNum['flock'] )  ) {
-                    categ.flocks.push({
-                        id,
-                        x : position.x,
-                        y : position.y,
-                        sprt : sprite.type,
-                    })
-                } else if  ( ( sprite.type === SpriteTypeNum['targets'] )  ) {
-                    categ.targets.push({
-                        id,
-                        x : position.x,
-                        y : position.y,
-                        sprt : sprite.type,
-                        cs : (color)?(color.cs):0,
-                        //type : i%(Object.keys(TARGETS_TYPE).length),// ( animation && animation.step )?(animation.step):0,
-                        tt : (sprite.subtypes)?(sprite.subtypes.tt):0
-                    })
-                    __idx++
-                } else if  ( ( sprite.type === SpriteTypeNum['target_hit'] )  ) {
-                    categ.targets.push({
-                        id,
-                        x : position.x,
-                        y : position.y,
-                        sprt : sprite.type,
-                        cs : (color)?(color.cs):0,
-                    })
-                    __idx++
-                } else  if ( ( sprite.type === SpriteTypeNum['plane'] ) && direction && player ) {
+            // if ( sprite && position ) {
+            //     if  ( ( sprite.type === SpriteTypeNum['bonuses'] )  ) {
+            //         categ.bonuses.push({
+            //             id,
+            //             x : position.x,
+            //             y : position.y,
+            //             sprt : sprite.type,
+            //             as : ( animation && animation.step )?(animation.step):0,
+            //             cs : (color)?(color.cs):0,
+            //             bt : (sprite.subtypes)?(sprite.subtypes.bt):0
+            //         })
+            //     } else if  ( ( sprite.type === SpriteTypeNum['balloon'] )  ) {
+            //         categ.balloons.push({
+            //             id,
+            //             x : position.x,
+            //             y : position.y,
+            //             sprt : sprite.type,
+            //             cs : (color)?(color.cs || 0):0,
+            //             as : ( animation && animation.step )?(animation.step):0,
+            //         })
+            //     } else if  ( ( sprite.type === SpriteTypeNum['basket'] )  ) {
+            //         categ.balloons.push({
+            //             id,
+            //             x : position.x,
+            //             y : position.y, 
+            //             sprt : sprite.type,
+            //             cs : (color)?(color.cs || 0):0,                        
+            //             as : ( animation && animation.step )?(animation.step):0,
+            //         })
+            //     } else if  ( ( sprite.type === SpriteTypeNum['ox'] )  ) {
+            //         categ.oxs.push({
+            //             id,
+            //             x : position.x,
+            //             y : position.y, 
+            //             sprt : sprite.type,
+            //             as : ( animation && animation.step )?(animation.step):0,
+            //         })
+            //     } else if  ( ( sprite.type === SpriteTypeNum['flock'] )  ) {
+            //         categ.flocks.push({
+            //             id,
+            //             x : position.x,
+            //             y : position.y,
+            //             sprt : sprite.type,
+            //         })
+            //     } else if  ( ( sprite.type === SpriteTypeNum['targets'] )  ) {
+            //         categ.targets.push({
+            //             id,
+            //             x : position.x,
+            //             y : position.y,
+            //             sprt : sprite.type,
+            //             cs : (color)?(color.cs):0,
+            //             //type : i%(Object.keys(TARGETS_TYPE).length),// ( animation && animation.step )?(animation.step):0,
+            //             tt : (sprite.subtypes)?(sprite.subtypes.tt):0
+            //         })
+            //         __idx++
+            //     } else if  ( ( sprite.type === SpriteTypeNum['target_hit'] )  ) {
+            //         categ.targets.push({
+            //             id,
+            //             x : position.x,
+            //             y : position.y,
+            //             sprt : sprite.type,
+            //             cs : (color)?(color.cs):0,
+            //         })
+            //         __idx++
+            //     } else  if ( ( sprite.type === SpriteTypeNum['plane'] ) && direction && player ) {
                     
-                    categ.planes.push({
-                        id,
-                        name : player.name,
-                        teamName,
-                        teamColorScheme,
-                        x : position.x,
-                        y : position.y,
-                        ...symbFilterProps('dparams',{
-                            cs : (color)?(color.cs):0,
-                            a16 : direction.a16,
-                            r : ((r)?(r.r):0),
-                            sprt : sprite.type,
-                        }),
-                    })
-                    if ( health ){
-                        categ.planes[ categ.planes.length - 1].lf = health.life
-                    }
-                    if ( didTakeDamage ){
-                        categ.planes[ categ.planes.length - 1].dmg = 1
-                    }
+            //         categ.planes.push({
+            //             id,
+            //             name : player.name,
+            //             teamName,
+            //             teamColorScheme,
+            //             x : position.x,
+            //             y : position.y,
+            //             ...symbFilterProps('dparams',{
+            //                 cs : (color)?(color.cs):0,
+            //                 a16 : direction.a16,
+            //                 r : ((r)?(r.r):0),
+            //                 sprt : sprite.type,
+            //             }),
+            //         })
+            //         if ( health ){
+            //             categ.planes[ categ.planes.length - 1].lf = health.life
+            //         }
+            //         if ( didTakeDamage ){
+            //             categ.planes[ categ.planes.length - 1].dmg = 1
+            //         }
 
-                    /*
-                      categ.planes.push({
-                      id : id,
-                      name : player.name,
-                      x : position.x,
-                      y : position.y,
-                      sprt : sprite.type,
-                      cs : (color)?(color.cs):0,
-                      a16 : direction.a16,
-                      r : ((r)?(r.r):0),
-                      })
-                    */
-                }  else  if ( ( sprite.type === SpriteTypeNum['debris'] )  ) {
-                    categ.debris.push({
-                        id : id,
-                        x : position.x,
-                        y : position.y,
-                        sprt : sprite.type,
-                        cs : (color)?(color.cs):0,
-                        dt : (sprite.subtypes)?(sprite.subtypes.dt):0,
-                    })
-                }  else  if ( ( sprite.type === SpriteTypeNum['missile'] ) && direction  ) {
-                    categ.missiles.push({
-                        id : id,
-                        a16 : direction.a16,
-                        x : position.x,
-                        y : position.y,
-                        sprt : sprite.type,
-                        cs : (color)?(color.cs):0,
-                        noise,
-                    })
-                    if ( health ){
-                        categ.missiles[ categ.missiles.length - 1].lf = health.life
-                    }
-                    if ( didTakeDamage ){
-                        categ.missiles[ categ.missiles.length - 1].dmg = 1
-                    }
+            //         /*
+            //           categ.planes.push({
+            //           id : id,
+            //           name : player.name,
+            //           x : position.x,
+            //           y : position.y,
+            //           sprt : sprite.type,
+            //           cs : (color)?(color.cs):0,
+            //           a16 : direction.a16,
+            //           r : ((r)?(r.r):0),
+            //           })
+            //         */
+            //     }  else  if ( ( sprite.type === SpriteTypeNum['debris'] )  ) {
+            //         categ.debris.push({
+            //             id : id,
+            //             x : position.x,
+            //             y : position.y,
+            //             sprt : sprite.type,
+            //             cs : (color)?(color.cs):0,
+            //             dt : (sprite.subtypes)?(sprite.subtypes.dt):0,
+            //         })
+            //     }  else  if ( ( sprite.type === SpriteTypeNum['missile'] ) && direction  ) {
+            //         categ.missiles.push({
+            //             id : id,
+            //             a16 : direction.a16,
+            //             x : position.x,
+            //             y : position.y,
+            //             sprt : sprite.type,
+            //             cs : (color)?(color.cs):0,
+            //             noise,
+            //         })
+            //         if ( health ){
+            //             categ.missiles[ categ.missiles.length - 1].lf = health.life
+            //         }
+            //         if ( didTakeDamage ){
+            //             categ.missiles[ categ.missiles.length - 1].dmg = 1
+            //         }
 
-                } else  if ( ( sprite.type === SpriteTypeNum['bomb'] ) && direction  ) {
+            //     } else  if ( ( sprite.type === SpriteTypeNum['bomb'] ) && direction  ) {
                     
-                    let a16 = 0
-                    if ( a16 !== undefined ){
-                        a16 = direction.a16
-                    } else if ( a8 !== undefined ){
-                        a16 = a8 * 2 
-                    }
-                    categ.bombs.push({
-                        id : id,
-                        //a16 : direction.a8 * 2,
-                        a8 : Math.floor(a16/2),
-                        x : position.x,
-                        y : position.y,
-                        sprt : sprite.type,
-                        cs : (color)?(color.cs):0,    noise,
-                    })
-                    if ( health ){
-                        categ.bombs[ categ.bombs.length - 1].lf = health.life
-                    }
-                    if ( didTakeDamage ){
-                        categ.bombs[ categ.bombs.length - 1].dmg = 1
-                    }
+            //         let a16 = 0
+            //         if ( a16 !== undefined ){
+            //             a16 = direction.a16
+            //         } else if ( a8 !== undefined ){
+            //             a16 = a8 * 2 
+            //         }
+            //         categ.bombs.push({
+            //             id : id,
+            //             //a16 : direction.a8 * 2,
+            //             a8 : Math.floor(a16/2),
+            //             x : position.x,
+            //             y : position.y,
+            //             sprt : sprite.type,
+            //             cs : (color)?(color.cs):0,    noise,
+            //         })
+            //         if ( health ){
+            //             categ.bombs[ categ.bombs.length - 1].lf = health.life
+            //         }
+            //         if ( didTakeDamage ){
+            //             categ.bombs[ categ.bombs.length - 1].dmg = 1
+            //         }
                     
-                }
-            }
+        //}
+                     
             
             
-        })
+                     })
         const commonUpdate = Object.assign(
             categ, {
                 t : Date.now(),
