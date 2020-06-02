@@ -2,6 +2,7 @@
  * Systems
  */
 import { clamp, posmod } from '../utils.js'
+const seedrandom = require('seedrandom');
 const directions16 = new Array( 16 ).fill(0)
       .map( (_,i) => ( i * 2 * Math.PI / 16 ) )
       .map( x => [ Math.cos( x ), Math.sin( x ) ] )
@@ -349,21 +350,21 @@ export function mkSystems( W ){
             }
         })(),
         ( () => {
-            const { Components } = W,
+            const { Components, getSeed } = W,
                   countById = new Map()
             return {
                 name : 'placer', 
                 onStep : () => {
                     W.Components.placement.forEach( ([id]) => {
-
+                        const rng = seedrandom( getSeed() + W.getVersion() + id )
                         const position = Components.position.get( id )
                         if  ( position === undefined )
                             return
                         
                         const placement = Components.placement.get( id ),
                               { x1, y1, x2, y2 } = placement,
-                              x = x1 + ( x2 - x1 ) * Math.random(),
-                              y = x1 + ( x2 - x1 ) * Math.random()
+                              x = x1 + ( x2 - x1 ) * rng(),
+                              y = x1 + ( x2 - x1 ) * rng()
                         
                         position.x = x
                         position.y = y

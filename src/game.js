@@ -41,12 +41,15 @@ function debugMessage( ...p ){
 
 export const worldSize = {
     x1 : 0,
-    x2 : 2500,
+    //x2 : 2500,
     y1 : 0,
-    y2 : 2000,
+    //y2 : 2000,
     w : 2500,
-    h : 800
+    h : 2000
 }
+worldSize.x2 = worldSize.x1 + worldSize.w
+worldSize.y2 = worldSize.y1 + worldSize.h
+
 export const ADD_PLAYER_RETURNS = {
     OK : 0,
     WRONG_USERNAME : 1,
@@ -103,8 +106,7 @@ export const COLLISION_CATEGORY = {
     'missile' :16,
     'bomb' :32,
     'targets' : 64,
-    'balloon' : 128,
-    
+    'balloon' : 128,   
     'basket' : 256,
     'target_hit' : 512,
     'island' : 1024,
@@ -162,11 +164,11 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                       } ) {
 
     
-    const World = mkWorld()
-    const { Components, Systems, Items, Events } = World
-
     const seed = "braoume"
-    
+    const World = mkWorld( { seed } )
+    const { Components, Systems, Items, Events, getSeed } = World
+    const rng = seedrandom( getSeed() )
+
     const Options = optionsParser.parseOptions({
         showTeamScore : true,
         showPlayerScore : true,
@@ -261,7 +263,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         })
         return { timeoutId, actuatorId }
     }
-    function createPlacer( { x1, y1, x2, y2 }, intervalle, onFreePosition, props ){        
+    function createPlacer( { x1, y1, x2, y2 }, interval, onFreePosition, props ){        
         
         const radarId = Items.create( Object.assign({
             placement : { x1, y1, x2, y2 },
@@ -280,8 +282,9 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 if ( position === undefined ) return
                 Items.remove( radarId )
                 onFreePosition( position )
+                // console.log('free pos for placer',radarId,position)
             },
-            intervalle
+            interval
         )
         
     }
@@ -487,7 +490,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         {
             const islandData = {
                 w:500,
-                seed:'belleile'+Math.random(),
+                seed: seed+'1',
                 hmin:100,
                 hmax:200,
                 period:50
@@ -507,10 +510,10 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         }
         {
             const islandData = {
-                w:500,
-                seed:'belleile'+Math.random(),
+                w:800,
+                seed: seed+'2',
                 hmin:50,
-                hmax:200,
+                hmax:400,
                 period:50
             }
             Items.create({
@@ -537,7 +540,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         
         const basket = Items.create( {
             sprite : { type : SpriteTypeNum['basket'] },
-            position : { x : 200 + (800 * Math.random()), y : 400 },
+            position : { x : 200 + (800 * rng()), y : 400 },
             mass : { mass: 10 },
             animation : { timeoutId : timeoutAnim,
                           playlist : [0,0,0,0,3,3,1,1,1,1,3,3,3,0,0,0,0,0,0,3,2,2,2,2,3,3] },
@@ -630,7 +633,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
     //     return id
     // }
     function createAndPlacePlayer( { name, score, colorScheme, teamId, cipiu } ) {
-
+        
         const found = firstPlayerByName( name )
         if ( found )
             return
@@ -659,12 +662,13 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         }
         let version = World.getVersion()
         const cipiuc = ( cipiu )?( { cipiu : { cipiuType : 0 } } ):({})
+        const spectate = ( cipiu )?false:true
         const id1 = Items.create( {            
             fly : { freefall : 0 },
             player : { name },
             score : { total : score },
             member : { teamId },
-            position : { x : 200 + Math.random() * 800, y : 200 },
+            position : { x : 200 + rng() * 800, y : 200 },
             direction : { a16 : 0 },
             propulsor : { power : 10, min : 0, max : 10 },
             speed : { pps : 0, max : 10, min : 5 },
@@ -898,13 +902,15 @@ export function Game( { tellPlayer, // called with user centered world, each wor
         createFlyingBalloon( World )
         if ( Options.minesCount ){
             new Array( Options.minesCount ).fill(0).map( () => {
-                const x = worldSize.x1 + Math.random() * worldSize.w
-                const y = worldSize.y1 + Math.random() * worldSize.h
+                const x = worldSize.x1 + rng() * worldSize.w
+                const y = worldSize.y1 + rng() * worldSize.h
                 createMine( x, y, 0 )
             })
         }
 
-        Events.wait( 1 * 10, () => addPlayer( { name : 'cipiu1', score : 0, cipiu : true } ) )
+        for ( let i = 0 ; i < 7 ; i++ ){
+            Events.wait( i * 10, () => addPlayer( { name : 'cipiu'+i, score : 0, cipiu : true } ) )
+        }
         /*        Events.wait( 2 * 10, () => addPlayer( { name : 'cipiu2', score : 0, cipiu : true } ) )   
                   Events.wait( 3 * 10, () => addPlayer( { name : 'cipiu3', score : 0, cipiu : true } ) )
                   Events.wait( 4 * 10, () => addPlayer( { name : 'cipiu4', score : 0, cipiu : true } ) )
@@ -973,8 +979,11 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                 if ( player && player.name ){
                     const name = player.name
                     const pushButton = button => handleInput( name, [ button ] )
-                    const randomControl = Controls[ Math.floor( Math.random() * Controls.length ) ]
-                    pushButton( randomControl )
+                    const randomControl = Controls[ Math.floor( rng() * Controls.length ) ]
+                    if ( rng() > 0.99 ){
+                    // console.log( name, randomControl )
+                        pushButton( randomControl )
+                    }
                 }
             })
             
@@ -1004,7 +1013,6 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                             })
                             Events.wait( 1, () => Items.remove( id ) )
                         }
-                        //Items.remove( id )
                     }
                 }
             }
@@ -1244,201 +1252,6 @@ export function Game( { tellPlayer, // called with user centered world, each wor
                     Object.assign( obj, { noise} )
                 }
             }
-            //             teamName,
-            //             teamColorScheme,
-            //a16 : direction.a16,
-            //                 r : ((r)?(r.r):0),
-
-            
-            //             sprt : sprite.type,
-            //             as : ( animation && animation.step )?(animation.step):0,
-            //             cs : (color)?(color.cs):0,
-            //             bt : (sprite.subtypes)?(sprite.subtypes.bt):0
-            
-            //}
-
-            // if ( sprite && position ){
-            
-            //     const sprdata = itemToSpriteData( World, id )
-            //     sprdata.sprt = sprite.type
-            //     //console.log('sprdata',sprdata)
-
-            //     const dprops = symbFilterProps( 'dparams', sprdata )
-            //     //console.log('dprops',dprops)
-            //     // const dparams = SpriteInfosByTypeNum[ sprite.type ]['dparams']
-            //     // if ( dparams === undefined )
-            //     //     throw new Error('NO!')
-
-            //     // const p = dparams.reduce( 
-            
-            //     // const dataKeys = Object.keys( sprdata )
-            //     // for ( let i = 0 ; i < dataKeys.length ; i++ ){
-            //     //     const k = dataKeys[ i ]
-            //     //     if ( infos
-            //     // }
-
-            //     const obj = {
-            //         id,
-            //         x : position.x,
-            //         y : position.y,
-            //         ...dprops
-            //     }
-            //     categ.sprites.push(  obj )
-            //     //console.log(JSON.stringify( obj ) )
-            
-            
-            // }
-            
-            // if ( sprite && position ) {
-            //     if  ( ( sprite.type === SpriteTypeNum['bonuses'] )  ) {
-            //         categ.bonuses.push({
-            //             id,
-            //             x : position.x,
-            //             y : position.y,
-            //             sprt : sprite.type,
-            //             as : ( animation && animation.step )?(animation.step):0,
-            //             cs : (color)?(color.cs):0,
-            //             bt : (sprite.subtypes)?(sprite.subtypes.bt):0
-            //         })
-            //     } else if  ( ( sprite.type === SpriteTypeNum['balloon'] )  ) {
-            //         categ.balloons.push({
-            //             id,
-            //             x : position.x,
-            //             y : position.y,
-            //             sprt : sprite.type,
-            //             cs : (color)?(color.cs || 0):0,
-            //             as : ( animation && animation.step )?(animation.step):0,
-            //         })
-            //     } else if  ( ( sprite.type === SpriteTypeNum['basket'] )  ) {
-            //         categ.balloons.push({
-            //             id,
-            //             x : position.x,
-            //             y : position.y, 
-            //             sprt : sprite.type,
-            //             cs : (color)?(color.cs || 0):0,                        
-            //             as : ( animation && animation.step )?(animation.step):0,
-            //         })
-            //     } else if  ( ( sprite.type === SpriteTypeNum['ox'] )  ) {
-            //         categ.oxs.push({
-            //             id,
-            //             x : position.x,
-            //             y : position.y, 
-            //             sprt : sprite.type,
-            //             as : ( animation && animation.step )?(animation.step):0,
-            //         })
-            //     } else if  ( ( sprite.type === SpriteTypeNum['flock'] )  ) {
-            //         categ.flocks.push({
-            //             id,
-            //             x : position.x,
-            //             y : position.y,
-            //             sprt : sprite.type,
-            //         })
-            //     } else if  ( ( sprite.type === SpriteTypeNum['targets'] )  ) {
-            //         categ.targets.push({
-            //             id,
-            //             x : position.x,
-            //             y : position.y,
-            //             sprt : sprite.type,
-            //             cs : (color)?(color.cs):0,
-            //             //type : i%(Object.keys(TARGETS_TYPE).length),// ( animation && animation.step )?(animation.step):0,
-            //             tt : (sprite.subtypes)?(sprite.subtypes.tt):0
-            //         })
-            //         __idx++
-            //     } else if  ( ( sprite.type === SpriteTypeNum['target_hit'] )  ) {
-            //         categ.targets.push({
-            //             id,
-            //             x : position.x,
-            //             y : position.y,
-            //             sprt : sprite.type,
-            //             cs : (color)?(color.cs):0,
-            //         })
-            //         __idx++
-            //     } else  if ( ( sprite.type === SpriteTypeNum['plane'] ) && direction && player ) {
-            
-            //         categ.planes.push({
-            //             id,
-            //             name : player.name,
-            //             teamName,
-            //             teamColorScheme,
-            //             x : position.x,
-            //             y : position.y,
-            //             ...symbFilterProps('dparams',{
-            //                 cs : (color)?(color.cs):0,
-            //                 a16 : direction.a16,
-            //                 r : ((r)?(r.r):0),
-            //                 sprt : sprite.type,
-            //             }),
-            //         })
-            //         if ( health ){
-            //             categ.planes[ categ.planes.length - 1].lf = health.life
-            //         }
-            //         if ( didTakeDamage ){
-            //             categ.planes[ categ.planes.length - 1].dmg = 1
-            //         }
-
-            //         /*
-            //           categ.planes.push({
-            //           id : id,
-            //           name : player.name,
-            //           x : position.x,
-            //           y : position.y,
-            //           sprt : sprite.type,
-            //           cs : (color)?(color.cs):0,
-            //           a16 : direction.a16,
-            //           r : ((r)?(r.r):0),
-            //           })
-            //         */
-            //     }  else  if ( ( sprite.type === SpriteTypeNum['debris'] )  ) {
-            //         categ.debris.push({
-            //             id : id,
-            //             x : position.x,
-            //             y : position.y,
-            //             sprt : sprite.type,
-            //             cs : (color)?(color.cs):0,
-            //             dt : (sprite.subtypes)?(sprite.subtypes.dt):0,
-            //         })
-            //     }  else  if ( ( sprite.type === SpriteTypeNum['missile'] ) && direction  ) {
-            //         categ.missiles.push({
-            //             id : id,
-            //             a16 : direction.a16,
-            //             x : position.x,
-            //             y : position.y,
-            //             sprt : sprite.type,
-            //             cs : (color)?(color.cs):0,
-            //             noise,
-            //         })
-            //         if ( health ){
-            //             categ.missiles[ categ.missiles.length - 1].lf = health.life
-            //         }
-            //         if ( didTakeDamage ){
-            //             categ.missiles[ categ.missiles.length - 1].dmg = 1
-            //         }
-
-            //     } else  if ( ( sprite.type === SpriteTypeNum['bomb'] ) && direction  ) {
-            
-            //         let a16 = 0
-            //         if ( a16 !== undefined ){
-            //             a16 = direction.a16
-            //         } else if ( a8 !== undefined ){
-            //             a16 = a8 * 2 
-            //         }
-            //         categ.bombs.push({
-            //             id : id,
-            //             //a16 : direction.a8 * 2,
-            //             a8 : Math.floor(a16/2),
-            //             x : position.x,
-            //             y : position.y,
-            //             sprt : sprite.type,
-            //             cs : (color)?(color.cs):0,    noise,
-            //         })
-            //         if ( health ){
-            //             categ.bombs[ categ.bombs.length - 1].lf = health.life
-            //         }
-            //         if ( didTakeDamage ){
-            //             categ.bombs[ categ.bombs.length - 1].dmg = 1
-            //         }
-            
-            //}
             
             
             
@@ -1504,9 +1317,6 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             teamId = smallest.id
         }
         const isPlacer = found && Components.placement.has( found )
-        console.log({isPlacer})
-        
-        
         createAndPlacePlayer( { name, score, teamId, cipiu } )
         //createPlayer( name, score )
         // dbgItems()

@@ -6,7 +6,7 @@ import { mkEvents } from './events.js'
 /*
  * World
  */ 
-export function mkWorld( ){
+export function mkWorld( { seed = 'seed'} = {} ){
 
     let version = -1
 
@@ -14,7 +14,8 @@ export function mkWorld( ){
         Components : undefined,
         Systems : undefined,
         Items : undefined,
-        Events : undefined
+        Events : undefined,
+        getSeed : () => seed
     }
     World.Components = mkComponents( World )
     World.Items = mkItems( World )
@@ -35,7 +36,7 @@ export function mkWorld( ){
             step,
             forEachComponent : orderedComponents.forEach.bind( orderedComponents ),
             forEachSystem : World.Systems.forEach,
-            getVersion : () => version 
+            getVersion : () => version,
         }
     )
 }
