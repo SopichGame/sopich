@@ -944,6 +944,14 @@ export function mkSystems( W ){
                     return collide
                 }
             }
+            function collisionOwnership12( id1, id2 ){
+                const c1Owned = Components.owned.get( id1 )
+                if ( c1Owned === undefined )
+                    return
+                if ( c1Owned.ownerId === id2 )
+                    return true
+                
+            }
             function handleCollision12( id1, id2, box1, box2 ){                
                 const attack2 = W.Components.attack.get( id2 )
                 if ( attack2 ){
@@ -1040,6 +1048,13 @@ export function mkSystems( W ){
                         const logic = collisionLogicCollides( id1, id2 )
                         if ( logic === false )
                             return
+                        {
+                            //                                    { owned : { ownerId : targetId } },
+                            if ( collisionOwnership12( id1, id2 ) === true )
+                                return
+                            if ( collisionOwnership12( id2, id1 ) === true )
+                                return
+                        }
                         
                         const box1 = boxes[ i1 ],
                               box2 = boxes[ i2 ]

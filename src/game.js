@@ -45,7 +45,7 @@ export const worldSize = {
     y1 : 0,
     //y2 : 2000,
     w : 2500,
-    h : 2000
+    h : 1000
 }
 worldSize.x2 = worldSize.x1 + worldSize.w
 worldSize.y2 = worldSize.y1 + worldSize.h
@@ -908,7 +908,7 @@ export function Game( { tellPlayer, // called with user centered world, each wor
             })
         }
 
-        for ( let i = 0 ; i < 7 ; i++ ){
+        for ( let i = 0 ; i < 2 ; i++ ){
             Events.wait( i * 10, () => addPlayer( { name : 'cipiu'+i, score : 0, cipiu : true } ) )
         }
         /*        Events.wait( 2 * 10, () => addPlayer( { name : 'cipiu2', score : 0, cipiu : true } ) )   
