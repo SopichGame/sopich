@@ -1,7 +1,6 @@
 const express = require('express')
 const webpack = require('webpack')
 const webpackDevMiddleware = require('webpack-dev-middleware')
-//const socketio = require('socket.io')
 const mongoose = require('mongoose')
 const LocalStrategy = require('passport-local')
 const Constants = require('../shared/constants')
@@ -149,7 +148,7 @@ const webSocketServersPool = WebSocketServersPool( server, expressSession )
 /*
  * socket games
  */
-const GamesManager = require('./gamesmanager.js')
+const { GamesManager, listPlayers } = require('./gamesmanager.js')
 const gamesManager = GamesManager()
 
 function gameDebugMessage( ...p ){
@@ -182,18 +181,16 @@ app.get('/me',  [
 app.get('/games',  [
     ( req, res ) => {
         const list = []
-        gamesManager.forEach( ( game, name ) => {
-            const players = game.getPlayers()
-            /* const options = game.getOptions() */ 
-            list.push( { name, players } )
-        })
+        gamesManager.forEach( ( managed, name ) => {
+            list.push( { name, players : listPlayers( managed ) } )         
+        }) 
         res.json(list)
     }])
 app.get('/game/:name/options',  [
     ( req, res ) => {
         const list = []
         try {
-            const game = gamesManager.get( req.params.name )
+            const { game, socketByUsername } = gamesManager.get( req.params.name )
             const options = game.getOptions()
             res.json( options )
         } catch( e ){
@@ -204,8 +201,8 @@ app.get('/game/:name/players',  [
     ( req, res ) => {
         const list = []
         try {
-            const game = gamesManager.get( req.params.name )
-            const players = game.getPlayers()
+            const managed = gamesManager.get( req.params.name )
+            const players = listPlayers( managed )
             res.json( players )
         } catch( e ){
             res.json( {} )
@@ -270,7 +267,7 @@ function createSopichWebSocketGame( name ){
             await User.updateScore( username, score )
         }
     } )    
-    gamesManager.add( name, game )
+    gamesManager.add( name, game, socketByUsername )
   
     
     socketServer1.on('connection', async ( ws, session, username ) => {
@@ -280,7 +277,6 @@ function createSopichWebSocketGame( name ){
         debugMessage('successful connection to socket', username )
         
         socketByUsername.set( username, ws )
-
         // send user infos
         
           const user = await User.findOne( { username } )
@@ -359,8 +355,9 @@ function createSopichWebSocketGame( name ){
         
     })
 }
-createSopichWebSocketGame('monsocketserver1')
-createSopichWebSocketGame('monsocketserver12')
+createSopichWebSocketGame('jeu1')
+createSopichWebSocketGame('jeu2')
+//createSopichWebSocketGame('monsocketserver12')
 // createSopichWebSocketGame('monsocketserver123')
 // createSopichWebSocketGame('monsocketserver1234')
 // createSopichWebSocketGame('monsocketserver12345')

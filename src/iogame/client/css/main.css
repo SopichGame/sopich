@@ -209,4 +209,11 @@ canvas {
     grid-template-columns: repeat(2, 1fr);
     /*grid-gap: 10px;
     grid-auto-rows: minmax(100px, auto);*/
+
+}
+.players-list-player-icon {
+    padding-right : 0.5em;
+}
+.players-list-player {
+    padding-right : 1em;
 }
